@@ -3,4 +3,14 @@ layout:
 - go.kubebuilder.io/v3
 projectName: gitbackup
 repo: github.com/ebiiim/gitbackup
+resources:
+- api:
+    crdVersion: v1
+    namespaced: true
+  controller: true
+  domain: ebiiim.com
+  group: gitbackup
+  kind: Repository
+  path: github.com/ebiiim/gitbackup/api/v1beta1
+  version: v1beta1
 version: "3"
