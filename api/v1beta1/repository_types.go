@@ -18,6 +18,8 @@ package v1beta1
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	corev1 "k8s.io/api/core/v1"
 )
 
 // EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
@@ -25,11 +27,32 @@ import (
 
 // RepositorySpec defines the desired state of Repository
 type RepositorySpec struct {
-	// INSERT ADDITIONAL SPEC FIELDS - desired state of cluster
 	// Important: Run "make" to regenerate code after modifying this file
 
-	// Foo is an example field of Repository. Edit repository_types.go to remove/update
-	Foo string `json:"foo,omitempty"`
+	// Src specifies the source repository in URL format.
+	Src string `json:"src"`
+	// Dst specifies the destination repository in URL format.
+	Dst string `json:"dst"`
+
+	// Schedule in Cron format.
+	Schedule string `json:"schedule"`
+	// TimeZone in TZ database name.
+	// See also: https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/#time-zones
+	// +optional
+	TimeZone *string `json:"timeZone,omitempty"`
+
+	// GitImage specifies the container image to run.
+	// +optional
+	GitImage *string `json:"gitImage,omitempty"`
+	// ImagePullSecret specifies the name of the Secret in the same namespace used to pull the GitImage.
+	// +optional
+	ImagePullSecret *corev1.LocalObjectReference `json:"imagePullSecret,omitempty"`
+	// GitConfig specifies the name of the ConfigMap in the same namespace used to mount .gitconfig
+	// +optional
+	GitConfig *corev1.LocalObjectReference `json:"gitConfig,omitempty"`
+	// GitCredentials specifies the name of the Secret in the same namespace used to mount .git-credentials
+	// +optional
+	GitCredentials *corev1.LocalObjectReference `json:"gitCredentials,omitempty"`
 }
 
 // RepositoryStatus defines the observed state of Repository
