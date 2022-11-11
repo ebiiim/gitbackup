@@ -1,0 +1,6 @@
+domain: ebiiim.com
+layout:
+- go.kubebuilder.io/v3
+projectName: gitbackup
+repo: github.com/ebiiim/gitbackup
+version: "3"
