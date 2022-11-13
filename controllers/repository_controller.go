@@ -191,6 +191,10 @@ func (r *RepositoryReconciler) reconcileCronJob(ctx context.Context, repo v1beta
 		WithRestartPolicy(corev1.RestartPolicyNever).
 		WithContainers(containers...).
 		WithVolumes(volumes...))
+	if repo.Spec.ImagePullSecret != nil {
+		podTemplateSpec.Spec.WithImagePullSecrets(corev1apply.LocalObjectReference().
+			WithName(repo.Spec.ImagePullSecret.Name))
+	}
 
 	cronJobSpec := batchv1apply.CronJobSpec().
 		WithSchedule(repo.Spec.Schedule).
