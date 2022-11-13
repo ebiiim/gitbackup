@@ -1,0 +1,14 @@
+# kubectl create configmap gitconfig-sample --from-file=$HOME/.gitconfig
+# ```
+# [credential]
+#   helper = store
+# ```
+apiVersion: v1
+metadata:
+  creationTimestamp: null
+  name: gitconfig-sample
+kind: ConfigMap
+data:
+  .gitconfig: |
+    [credential]
+      helper = store

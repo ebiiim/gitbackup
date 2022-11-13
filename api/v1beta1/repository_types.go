@@ -47,7 +47,7 @@ type RepositorySpec struct {
 	// +optional
 	ImagePullSecret *corev1.LocalObjectReference `json:"imagePullSecret,omitempty"`
 
-	// GitConfig specifies the name of the secret resource in the same namespace used to mount .git-config
+	// GitConfig specifies the name of the configmap resource in the same namespace used to mount .git-config
 	// Note that "[credential]\nhelper=store" is required to use GitCredentials.
 	// +optional
 	GitConfig *corev1.LocalObjectReference `json:"gitConfig,omitempty"`

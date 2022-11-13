@@ -42,8 +42,8 @@ spec:
                 description: Dst specifies the destination repository in URL format.
                 type: string
               gitConfig:
-                description: GitConfig specifies the name of the secret resource in
-                  the same namespace used to mount .git-config Note that "[credential]\nhelper=store"
+                description: GitConfig specifies the name of the configmap resource
+                  in the same namespace used to mount .git-config Note that "[credential]\nhelper=store"
                   is required to use GitCredentials.
                 properties:
                   name:
