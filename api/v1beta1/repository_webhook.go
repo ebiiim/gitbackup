@@ -17,6 +17,7 @@ limitations under the License.
 package v1beta1
 
 import (
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -32,8 +33,6 @@ func (r *Repository) SetupWebhookWithManager(mgr ctrl.Manager) error {
 		Complete()
 }
 
-// TODO(user): EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-
 //+kubebuilder:webhook:path=/mutate-gitbackup-ebiiim-com-v1beta1-repository,mutating=true,failurePolicy=fail,sideEffects=None,groups=gitbackup.ebiiim.com,resources=repositories,verbs=create;update,versions=v1beta1,name=mrepository.kb.io,admissionReviewVersions=v1
 
 var _ webhook.Defaulter = &Repository{}
@@ -42,7 +41,13 @@ var _ webhook.Defaulter = &Repository{}
 func (r *Repository) Default() {
 	repositorylog.Info("default", "name", r.Name)
 
-	// TODO(user): fill in your defaulting logic.
+	if r.Spec.GitImage == nil {
+		s := DefaultGitImage
+		r.Spec.GitImage = &s
+	}
+	if r.Spec.GitConfig == nil {
+		r.Spec.GitConfig = &corev1.LocalObjectReference{Name: DefaultGitConfig}
+	}
 }
 
 // TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.

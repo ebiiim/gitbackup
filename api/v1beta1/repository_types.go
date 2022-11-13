@@ -21,6 +21,11 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
+const (
+	DefaultGitConfig = "gitbackup-default-gitconfig"
+	DefaultGitImage  = "alpine/git:2.36.2"
+)
+
 // RepositorySpec defines the desired state of Repository
 type RepositorySpec struct {
 	// Src specifies the source repository in URL format.
@@ -59,6 +64,7 @@ type RepositoryStatus struct {
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
+//+kubebuilder:resource:shortName=repo;repos
 
 // Repository is the Schema for the repositories API
 type Repository struct {
