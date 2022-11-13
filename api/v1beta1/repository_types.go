@@ -22,8 +22,10 @@ import (
 )
 
 const (
-	DefaultGitConfig = "gitbackup-default-gitconfig"
-	DefaultGitImage  = "alpine/git:2.36.2"
+	AppName                = "gitbackup"
+	ControllerName         = AppName + "-repository-controller"
+	DefaultGitConfigPrefix = AppName + "-gitconfig-"
+	DefaultGitImage        = "alpine/git:2.36.2"
 )
 
 // RepositorySpec defines the desired state of Repository

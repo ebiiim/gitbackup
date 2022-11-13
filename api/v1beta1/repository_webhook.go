@@ -46,7 +46,7 @@ func (r *Repository) Default() {
 		r.Spec.GitImage = &s
 	}
 	if r.Spec.GitConfig == nil {
-		r.Spec.GitConfig = &corev1.LocalObjectReference{Name: DefaultGitConfig}
+		r.Spec.GitConfig = &corev1.LocalObjectReference{Name: DefaultGitConfigPrefix + r.Name}
 	}
 }
 
