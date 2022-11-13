@@ -30,9 +30,11 @@ import (
 	"k8s.io/apimachinery/pkg/types"
 	batchv1apply "k8s.io/client-go/applyconfigurations/batch/v1"
 	corev1apply "k8s.io/client-go/applyconfigurations/core/v1"
+	metav1apply "k8s.io/client-go/applyconfigurations/meta/v1"
 	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
+	"sigs.k8s.io/controller-runtime/pkg/client/apiutil"
 	"sigs.k8s.io/controller-runtime/pkg/log"
 
 	v1beta1 "github.com/ebiiim/gitbackup/api/v1beta1"
@@ -200,12 +202,26 @@ func (r *RepositoryReconciler) reconcileCronJob(ctx context.Context, repo v1beta
 		cronJobSpec.WithTimeZone(*repo.Spec.TimeZone)
 	}
 
+	gvk, err := apiutil.GVKForObject(&repo, r.Scheme)
+	if err != nil {
+		lg.Error(err, "unable to get GVK for Repository")
+		return err
+	}
+	ownerReference := metav1apply.OwnerReference().
+		WithAPIVersion(gvk.GroupVersion().Identifier()).
+		WithKind(gvk.Kind).
+		WithName(repo.Name).
+		WithUID(repo.GetUID()).
+		WithBlockOwnerDeletion(true).
+		WithController(true)
+
 	cronJob := batchv1apply.CronJob(v1beta1.AppName+"-"+repo.Name, repo.Namespace).
 		WithLabels(map[string]string{
 			"app.kubernetes.io/name":       v1beta1.AppName,
 			"app.kubernetes.io/instance":   repo.Name,
 			"app.kubernetes.io/created-by": v1beta1.ControllerName,
 		}).
+		WithOwnerReferences(ownerReference).
 		WithSpec(cronJobSpec)
 
 	// do server-side apply
