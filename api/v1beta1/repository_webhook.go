@@ -17,6 +17,8 @@ limitations under the License.
 package v1beta1
 
 import (
+	"errors"
+
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -59,7 +61,10 @@ var _ webhook.Validator = &Repository{}
 func (r *Repository) ValidateCreate() error {
 	repositorylog.Info("validate create", "name", r.Name)
 
-	// TODO(user): fill in your validation logic upon object creation.
+	if err := r.validateEnsureNonNil(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -67,7 +72,10 @@ func (r *Repository) ValidateCreate() error {
 func (r *Repository) ValidateUpdate(old runtime.Object) error {
 	repositorylog.Info("validate update", "name", r.Name)
 
-	// TODO(user): fill in your validation logic upon object update.
+	if err := r.validateEnsureNonNil(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -76,5 +84,15 @@ func (r *Repository) ValidateDelete() error {
 	repositorylog.Info("validate delete", "name", r.Name)
 
 	// TODO(user): fill in your validation logic upon object deletion.
+	return nil
+}
+
+func (r *Repository) validateEnsureNonNil() error {
+	if r.Spec.GitImage == nil {
+		return errors.New("GitImage == nil")
+	}
+	if r.Spec.GitConfig == nil {
+		return errors.New("GitConfig == nil")
+	}
 	return nil
 }
