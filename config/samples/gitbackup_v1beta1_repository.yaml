@@ -1,12 +1,15 @@
 apiVersion: gitbackup.ebiiim.com/v1beta1
 kind: Repository
 metadata:
-  labels:
-    app.kubernetes.io/name: repository
-    app.kubernetes.io/instance: repository-sample
-    app.kubernetes.io/part-of: gitbackup
-    app.kuberentes.io/managed-by: kustomize
-    app.kubernetes.io/created-by: gitbackup
   name: repository-sample
 spec:
-  # TODO(user): Add fields here
+  src: https://github.com/ebiiim/gitbackup
+  dst: https://gitlab.com/ebiiim/gitbackup
+  # backup daily at 0600
+  schedule: "0 6 * * *"
+  # (optional) specify a secret resource in the same namespace
+  gitCredentials:
+    name: gitcredentials-sample
+  # (optional) specify a secret resource in the same namespace
+  gitConfig:
+    name: gitconfig-sample

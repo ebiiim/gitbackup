@@ -17,18 +17,12 @@ limitations under the License.
 package v1beta1
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-
 	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
-
-// EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-// NOTE: json tags are required.  Any new fields you add must have json tags for the fields to be serialized.
 
 // RepositorySpec defines the desired state of Repository
 type RepositorySpec struct {
-	// Important: Run "make" to regenerate code after modifying this file
-
 	// Src specifies the source repository in URL format.
 	Src string `json:"src"`
 	// Dst specifies the destination repository in URL format.
@@ -47,7 +41,9 @@ type RepositorySpec struct {
 	// ImagePullSecret specifies the name of the Secret in the same namespace used to pull the GitImage.
 	// +optional
 	ImagePullSecret *corev1.LocalObjectReference `json:"imagePullSecret,omitempty"`
-	// GitConfig specifies the name of the ConfigMap in the same namespace used to mount .gitconfig
+
+	// GitConfig specifies the name of the secret resource in the same namespace used to mount .git-config
+	// Note that "[credential]\nhelper=store" is required to use GitCredentials.
 	// +optional
 	GitConfig *corev1.LocalObjectReference `json:"gitConfig,omitempty"`
 	// GitCredentials specifies the name of the Secret in the same namespace used to mount .git-credentials

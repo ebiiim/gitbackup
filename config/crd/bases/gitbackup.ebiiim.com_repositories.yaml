@@ -39,8 +39,9 @@ spec:
                 description: Dst specifies the destination repository in URL format.
                 type: string
               gitConfig:
-                description: GitConfig specifies the name of the ConfigMap in the
-                  same namespace used to mount .gitconfig
+                description: GitConfig specifies the name of the secret resource in
+                  the same namespace used to mount .git-config Note that "[credential]\nhelper=store"
+                  is required to use GitCredentials.
                 properties:
                   name:
                     description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
