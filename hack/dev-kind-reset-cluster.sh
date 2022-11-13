@@ -14,6 +14,10 @@ CERT_MANAGER_YAML="https://github.com/cert-manager/cert-manager/releases/downloa
 
 cd "$PROJECT_ROOT"
 
+sudo sysctl fs.inotify.max_user_watches=524288
+sudo sysctl fs.inotify.max_user_instances=512
+kind delete cluster --name "$KIND_CLUSTER_NAME"
+
 kind create cluster --name "$KIND_CLUSTER_NAME" --image="$KIND_IMAGE" --config=- <<EOF
 kind: Cluster
 apiVersion: kind.x-k8s.io/v1alpha4
