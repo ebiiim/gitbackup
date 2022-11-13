@@ -17,8 +17,9 @@ cd "$PROJECT_ROOT"
 make undeploy || true
 make uninstall || true
 
-IMG=$IMG make docker-build
+make
+make docker-build IMG="$IMG"
 kind load docker-image "$IMG" -n "$KIND_CLUSTER_NAME"
 
-IMG=$IMG make install
-IMG=$IMG make deploy
+make install IMG="$IMG"
+make deploy IMG="$IMG"
