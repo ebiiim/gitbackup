@@ -15,6 +15,7 @@ CERT_MANAGER_YAML="https://github.com/cert-manager/cert-manager/releases/downloa
 cd "$PROJECT_ROOT"
 
 sudo systemctl start docker || sudo service docker start || true
+sleep 1
 
 # https://kind.sigs.k8s.io/docs/user/known-issues/#pod-errors-due-to-too-many-open-files
 sudo sysctl fs.inotify.max_user_watches=524288

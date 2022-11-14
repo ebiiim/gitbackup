@@ -14,12 +14,12 @@ IMG=$PROJECT_NAME-controller:$VERSION
 
 cd "$PROJECT_ROOT"
 
-make undeploy || true
-make uninstall || true
-
 make
 make docker-build IMG="$IMG"
 kind load docker-image "$IMG" -n "$KIND_CLUSTER_NAME"
+
+make undeploy || true
+make uninstall || true
 
 make install IMG="$IMG"
 make deploy IMG="$IMG"
