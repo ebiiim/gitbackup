@@ -1,8 +1,34 @@
 # gitbackup
-// TODO(user): Add simple overview of use/purpose
+
+A Kubernetes controller for daily backup of Git repos.
 
 ## Description
-// TODO(user): An in-depth paragraph about your project and overview of use
+
+1. You create a Repository resource.
+2. The controller creates a CronJob resource from it.
+3. The CronJob do the actual work.
+
+```yaml
+apiVersion: gitbackup.ebiiim.com/v1beta1
+kind: Repository
+metadata:
+  name: myrepo
+spec:
+  src: https://github.com/ebiiim/gitbackup
+  dst: https://gitlab.com/ebiiim/gitbackup
+  schedule: "0 6 * * *"
+  gitCredentials:
+    name: mysecret # specify a Secret resource in the same namespace
+```
+
+## Installation
+
+// TODO(user)
+
+```sh
+
+```
+
 
 ## Getting Started
 You’ll need a Kubernetes cluster to run against. You can use [KIND](https://sigs.k8s.io/kind) to get a local cluster for testing, or run against a remote cluster.
