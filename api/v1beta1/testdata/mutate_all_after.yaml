@@ -1,0 +1,17 @@
+apiVersion: gitbackup.ebiiim.com/v1beta1
+kind: Repository
+metadata:
+  namespace: default
+  name: testrepo-1
+spec:
+  src: https://example.com/src
+  dst: https://example.com/dst
+  schedule: "0 6 * * *"
+  timeZone: Asia/Tokyo
+  gitImage: example.com/git:2.36.2
+  imagePullSecret:
+    name: hoge
+  gitCredentials:
+    name: fuga
+  gitConfig:
+    name: piyo

@@ -22,11 +22,20 @@ import (
 )
 
 const (
-	AppName                = "gitbackup"
-	ControllerName         = AppName + "-repository-controller"
-	DefaultGitConfigPrefix = AppName + "-gitconfig-"
-	DefaultGitImage        = "alpine/git:2.36.2"
+	AppName         = "gitbackup"
+	ControllerName  = AppName + "-repository-controller"
+	DefaultGitImage = "alpine/git:2.36.2"
+
+	defaultGitConfigPrefix = AppName + "-gitconfig-"
 )
+
+func (r Repository) GetOwnedConfigMapName() string {
+	return defaultGitConfigPrefix + r.Name
+}
+
+func (r Repository) GetOwnedCronJobName() string {
+	return AppName + "-" + r.Name
+}
 
 // RepositorySpec defines the desired state of Repository
 type RepositorySpec struct {

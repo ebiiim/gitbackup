@@ -27,7 +27,6 @@ import (
 	"k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/apis/meta/v1/unstructured"
 	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/apimachinery/pkg/types"
 	batchv1apply "k8s.io/client-go/applyconfigurations/batch/v1"
 	corev1apply "k8s.io/client-go/applyconfigurations/core/v1"
 	metav1apply "k8s.io/client-go/applyconfigurations/meta/v1"
@@ -93,15 +92,11 @@ func (r *RepositoryReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	return ctrl.Result{}, nil
 }
 
-func namespacedName(obj client.Object) types.NamespacedName {
-	return types.NamespacedName{Namespace: obj.GetNamespace(), Name: obj.GetName()}
-}
-
 func (r *RepositoryReconciler) reconcileGitConfig(ctx context.Context, repo v1beta1.Repository) error {
 	lg := log.FromContext(ctx)
 	lg.Info("reconcileGitConfig")
 
-	cmName := v1beta1.DefaultGitConfigPrefix + repo.Name
+	cmName := repo.GetOwnedConfigMapName()
 
 	if repo.Spec.GitConfig.Name != cmName {
 		lg.Info("GitConfig specified")
@@ -219,7 +214,7 @@ func (r *RepositoryReconciler) reconcileCronJob(ctx context.Context, repo v1beta
 		WithBlockOwnerDeletion(true).
 		WithController(true)
 
-	cronJob := batchv1apply.CronJob(v1beta1.AppName+"-"+repo.Name, repo.Namespace).
+	cronJob := batchv1apply.CronJob(repo.GetOwnedCronJobName(), repo.Namespace).
 		WithLabels(map[string]string{
 			"app.kubernetes.io/name":       v1beta1.AppName,
 			"app.kubernetes.io/instance":   repo.Name,
@@ -232,7 +227,7 @@ func (r *RepositoryReconciler) reconcileCronJob(ctx context.Context, repo v1beta
 	// get current config > extract > not equal? > send patch
 
 	var cur batchv1.CronJob
-	if err := r.Get(ctx, namespacedName(&repo), &cur); err != nil && !errors.IsNotFound(err) {
+	if err := r.Get(ctx, client.ObjectKeyFromObject(&repo), &cur); err != nil && !errors.IsNotFound(err) {
 		lg.Error(err, "unable to get current CronJob")
 		return err
 	}

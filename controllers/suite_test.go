@@ -14,23 +14,31 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package controllers
+package controllers_test
 
 import (
+	"context"
 	"path/filepath"
 	"testing"
+	"time"
 
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
+	batchv1 "k8s.io/api/batch/v1"
+	corev1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/rest"
+	"k8s.io/utils/pointer"
+	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
 
-	gitbackupv1beta1 "github.com/ebiiim/gitbackup/api/v1beta1"
+	v1beta1 "github.com/ebiiim/gitbackup/api/v1beta1"
+	"github.com/ebiiim/gitbackup/controllers"
 	//+kubebuilder:scaffold:imports
 )
 
@@ -62,7 +70,7 @@ var _ = BeforeSuite(func() {
 	Expect(err).NotTo(HaveOccurred())
 	Expect(cfg).NotTo(BeNil())
 
-	err = gitbackupv1beta1.AddToScheme(scheme.Scheme)
+	err = v1beta1.AddToScheme(scheme.Scheme)
 	Expect(err).NotTo(HaveOccurred())
 
 	//+kubebuilder:scaffold:scheme
@@ -77,4 +85,133 @@ var _ = AfterSuite(func() {
 	By("tearing down the test environment")
 	err := testEnv.Stop()
 	Expect(err).NotTo(HaveOccurred())
+})
+
+var (
+	testNS    = "default"
+	testRepo1 = v1beta1.Repository{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-repo1",
+			Namespace: testNS,
+		},
+		Spec: v1beta1.RepositorySpec{
+			Src:             "https://example.com/src",
+			Dst:             "https://example.com/dst",
+			Schedule:        "0 6 * * *",
+			TimeZone:        nil,
+			GitImage:        pointer.String(v1beta1.DefaultGitImage),
+			ImagePullSecret: nil,
+			GitConfig: &corev1.LocalObjectReference{
+				Name: "gitbackup-gitconfig-test-repo1",
+			},
+			GitCredentials: nil,
+		},
+	}
+	testRepo2 = v1beta1.Repository{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-repo2",
+			Namespace: testNS,
+		},
+		Spec: v1beta1.RepositorySpec{
+			Src:             "https://example.com/src",
+			Dst:             "https://example.com/dst",
+			Schedule:        "0 6 * * *",
+			TimeZone:        nil,
+			GitImage:        pointer.String(v1beta1.DefaultGitImage),
+			ImagePullSecret: nil,
+			GitConfig: &corev1.LocalObjectReference{
+				Name: "user-created-cm",
+			},
+			GitCredentials: nil,
+		},
+	}
+)
+
+var _ = Describe("Repository controller", func() {
+
+	var cncl context.CancelFunc
+
+	BeforeEach(func() {
+
+		ctx, cancel := context.WithCancel(context.Background())
+		cncl = cancel
+
+		var err error
+		err = k8sClient.DeleteAllOf(ctx, &v1beta1.Repository{}, client.InNamespace(testNS))
+		Expect(err).NotTo(HaveOccurred())
+		err = k8sClient.DeleteAllOf(ctx, &batchv1.CronJob{}, client.InNamespace(testNS))
+		Expect(err).NotTo(HaveOccurred())
+		err = k8sClient.DeleteAllOf(ctx, &corev1.ConfigMap{}, client.InNamespace(testNS))
+		Expect(err).NotTo(HaveOccurred())
+		time.Sleep(100 * time.Millisecond)
+
+		mgr, err := ctrl.NewManager(cfg, ctrl.Options{
+			Scheme: scheme.Scheme,
+		})
+		Expect(err).NotTo(HaveOccurred())
+
+		reconciler := controllers.RepositoryReconciler{
+			Client: k8sClient,
+			Scheme: scheme.Scheme,
+		}
+		err = reconciler.SetupWithManager(mgr)
+		Expect(err).NotTo(HaveOccurred())
+
+		go func() {
+			err := mgr.Start(ctx)
+			if err != nil {
+				panic(err)
+			}
+		}()
+		time.Sleep(100 * time.Millisecond)
+	})
+
+	AfterEach(func() {
+		cncl() // stop the mgr
+		time.Sleep(100 * time.Millisecond)
+	})
+
+	It("should create CronJob and ConfigMap", func() {
+
+		repo := testRepo1
+
+		ctx := context.Background()
+
+		err := k8sClient.Create(ctx, &repo)
+		Expect(err).NotTo(HaveOccurred())
+
+		cm := corev1.ConfigMap{}
+		Eventually(func() error {
+			return k8sClient.Get(ctx, client.ObjectKey{Namespace: testNS, Name: repo.Spec.GitConfig.Name}, &cm)
+		}).Should(Succeed())
+		Expect(cm.Data).Should(HaveKey(".gitconfig"))
+
+		cj := batchv1.CronJob{}
+		Eventually(func() error {
+			return k8sClient.Get(ctx, client.ObjectKey{Namespace: testNS, Name: v1beta1.AppName + "-" + repo.Name}, &cj)
+		}).Should(Succeed())
+		Expect(cj.Spec.Schedule).Should(Equal(repo.Spec.Schedule))
+	})
+
+	It("should only create CronJob", func() {
+
+		repo := testRepo2
+
+		ctx := context.Background()
+
+		err := k8sClient.Create(ctx, &repo)
+		Expect(err).NotTo(HaveOccurred())
+
+		cm := corev1.ConfigMap{}
+		Eventually(func() error {
+			return k8sClient.Get(ctx, client.ObjectKey{Namespace: testNS, Name: repo.Spec.GitConfig.Name}, &cm)
+		}).ShouldNot(Succeed())
+
+		cj := batchv1.CronJob{}
+		Eventually(func() error {
+			return k8sClient.Get(ctx, client.ObjectKey{Namespace: testNS, Name: v1beta1.AppName + "-" + repo.Name}, &cj)
+		}).Should(Succeed())
+		Expect(cj.Spec.Schedule).Should(Equal(repo.Spec.Schedule))
+	})
+
 })

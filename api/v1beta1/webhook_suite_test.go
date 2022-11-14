@@ -14,13 +14,15 @@ See the License for the specific language governing permissions and
 limitations under the License.
 */
 
-package v1beta1
+package v1beta1_test
 
 import (
 	"context"
 	"crypto/tls"
 	"fmt"
+	"io"
 	"net"
+	"os"
 	"path/filepath"
 	"testing"
 	"time"
@@ -31,12 +33,15 @@ import (
 	admissionv1beta1 "k8s.io/api/admission/v1beta1"
 	//+kubebuilder:scaffold:imports
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/yaml"
 	"k8s.io/client-go/rest"
 	ctrl "sigs.k8s.io/controller-runtime"
 	"sigs.k8s.io/controller-runtime/pkg/client"
 	"sigs.k8s.io/controller-runtime/pkg/envtest"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/log/zap"
+
+	v1beta1 "github.com/ebiiim/gitbackup/api/v1beta1"
 )
 
 // These tests use Ginkgo (BDD-style Go testing framework). Refer to
@@ -75,7 +80,7 @@ var _ = BeforeSuite(func() {
 	Expect(cfg).NotTo(BeNil())
 
 	scheme := runtime.NewScheme()
-	err = AddToScheme(scheme)
+	err = v1beta1.AddToScheme(scheme)
 	Expect(err).NotTo(HaveOccurred())
 
 	err = admissionv1beta1.AddToScheme(scheme)
@@ -99,7 +104,7 @@ var _ = BeforeSuite(func() {
 	})
 	Expect(err).NotTo(HaveOccurred())
 
-	err = (&Repository{}).SetupWebhookWithManager(mgr)
+	err = (&v1beta1.Repository{}).SetupWebhookWithManager(mgr)
 	Expect(err).NotTo(HaveOccurred())
 
 	//+kubebuilder:scaffold:webhook
@@ -130,3 +135,66 @@ var _ = AfterSuite(func() {
 	err := testEnv.Stop()
 	Expect(err).NotTo(HaveOccurred())
 })
+
+var _ = Describe("Repository webhook", func() {
+	Context("mutating", func() {
+		It("should mutate repositories", func() {
+			testMutate(mustOpen("testdata", "mutate_minimal_before.yaml"), mustOpen("testdata", "mutate_minimal_after.yaml"))
+			testMutate(mustOpen("testdata", "mutate_all_before.yaml"), mustOpen("testdata", "mutate_all_after.yaml"))
+		})
+	})
+	Context("validating", func() {
+		It("should create valid repositories", func() {
+			want := true
+			testValidate(mustOpen("testdata", "validate_all.yaml"), want)
+			testValidate(mustOpen("testdata", "validate_minimal.yaml"), want)
+		})
+		It("should not create invalid repositories", func() {
+			want := false
+			testValidate(mustOpen("testdata", "validate_wrong_cron.yaml"), want)
+		})
+	})
+})
+
+func testMutate(rIn, rWant io.Reader) {
+	ctx2 := context.Background()
+
+	var in, got, want v1beta1.Repository
+
+	err := yaml.NewYAMLOrJSONDecoder(rIn, 32).Decode(&in)
+	Expect(err).NotTo(HaveOccurred())
+
+	err = yaml.NewYAMLOrJSONDecoder(rWant, 32).Decode(&want)
+	Expect(err).NotTo(HaveOccurred())
+
+	err = k8sClient.Create(ctx2, &in)
+	Expect(err).NotTo(HaveOccurred())
+	err = k8sClient.Get(ctx2, client.ObjectKeyFromObject(&in), &got)
+	Expect(err).NotTo(HaveOccurred())
+
+	Expect(got.Spec).Should(Equal(want.Spec))
+}
+
+func testValidate(rIn io.Reader, shouldBeValid bool) {
+	ctx2 := context.Background()
+
+	var in v1beta1.Repository
+
+	err := yaml.NewYAMLOrJSONDecoder(rIn, 32).Decode(&in)
+	Expect(err).NotTo(HaveOccurred())
+
+	err = k8sClient.Create(ctx2, &in)
+	if shouldBeValid {
+		Expect(err).NotTo(HaveOccurred(), "Data: %+v", &in)
+	} else {
+		Expect(err).To(HaveOccurred(), "Data: %#v", &in)
+	}
+}
+
+func mustOpen(filePath ...string) io.Reader {
+	f, err := os.Open(filepath.Join(filePath...))
+	if err != nil {
+		panic(err)
+	}
+	return f
+}

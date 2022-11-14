@@ -17,8 +17,7 @@ limitations under the License.
 package v1beta1
 
 import (
-	"errors"
-
+	cron "github.com/robfig/cron/v3"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
@@ -48,7 +47,7 @@ func (r *Repository) Default() {
 		r.Spec.GitImage = &s
 	}
 	if r.Spec.GitConfig == nil {
-		r.Spec.GitConfig = &corev1.LocalObjectReference{Name: DefaultGitConfigPrefix + r.Name}
+		r.Spec.GitConfig = &corev1.LocalObjectReference{Name: r.GetOwnedConfigMapName()}
 	}
 }
 
@@ -61,7 +60,7 @@ var _ webhook.Validator = &Repository{}
 func (r *Repository) ValidateCreate() error {
 	repositorylog.Info("validate create", "name", r.Name)
 
-	if err := r.validateEnsureNonNil(); err != nil {
+	if err := r.validateCron(); err != nil {
 		return err
 	}
 
@@ -72,7 +71,7 @@ func (r *Repository) ValidateCreate() error {
 func (r *Repository) ValidateUpdate(old runtime.Object) error {
 	repositorylog.Info("validate update", "name", r.Name)
 
-	if err := r.validateEnsureNonNil(); err != nil {
+	if err := r.validateCron(); err != nil {
 		return err
 	}
 
@@ -87,12 +86,7 @@ func (r *Repository) ValidateDelete() error {
 	return nil
 }
 
-func (r *Repository) validateEnsureNonNil() error {
-	if r.Spec.GitImage == nil {
-		return errors.New("GitImage == nil")
-	}
-	if r.Spec.GitConfig == nil {
-		return errors.New("GitConfig == nil")
-	}
-	return nil
+func (r *Repository) validateCron() error {
+	_, err := cron.ParseStandard(r.Spec.Schedule)
+	return err
 }
