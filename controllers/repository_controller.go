@@ -126,6 +126,29 @@ func (r *RepositoryReconciler) reconcileCronJob(ctx context.Context, repo v1beta
 	lg := log.FromContext(ctx)
 	lg.Info("reconcileCronJob")
 
+	// generate shell commands
+	srcs := strings.Split(repo.Spec.Src, "/")
+	srcRepoName := srcs[len(srcs)-1]
+	cmdLog := func(s string) string {
+		logPrefix := "echo $(date -Iseconds) gitbackup:"
+		return fmt.Sprintf("%s %s", logPrefix, s)
+	}
+	gitCmd := strings.Join([]string{
+		cmdLog("start"),
+		cmdLog("set .gitconfig"),
+		"cp /gitconfig/.gitconfig /root/.gitconfig",
+		cmdLog("set .git-credentials"),
+		"cp /gitcredentials/.git-credentials /root/.git-credentials",
+		"set -e",
+		cmdLog("clone src repo"),
+		fmt.Sprintf("git clone --mirror '%s'", repo.Spec.Src),
+		fmt.Sprintf("cd '%s.git'", srcRepoName),
+		cmdLog("push dst repo"),
+		fmt.Sprintf("git push --mirror '%s'", repo.Spec.Dst),
+		"set +e",
+		cmdLog("completed"),
+	}, ";")
+
 	// create server-side apply config
 
 	var volumes []*corev1apply.VolumeApplyConfiguration
@@ -138,7 +161,7 @@ func (r *RepositoryReconciler) reconcileCronJob(ctx context.Context, repo v1beta
 	)
 	volumeMounts = append(volumeMounts, corev1apply.VolumeMount().
 		WithName("gitconfig").
-		WithMountPath("/root"),
+		WithMountPath("/gitconfig"),
 	)
 	if repo.Spec.GitCredentials != nil {
 		volumes = append(volumes, corev1apply.Volume().
@@ -153,15 +176,13 @@ func (r *RepositoryReconciler) reconcileCronJob(ctx context.Context, repo v1beta
 
 	var containers []*corev1apply.ContainerApplyConfiguration
 
-	srcs := strings.Split(repo.Spec.Src, "/")
-	srcRepoName := srcs[len(srcs)-1]
 	containers = append(containers, corev1apply.Container().
 		WithName("git").
 		WithImage(*repo.Spec.GitImage).
 		WithCommand(
 			"/bin/sh",
 			"-c",
-			fmt.Sprintf("cp /gitcredentials/.git-credentials /root/.git-credentials ; clone --mirror %s ; cd %s.git ; git push --mirror %s", repo.Spec.Src, srcRepoName, repo.Spec.Dst),
+			gitCmd,
 		).
 		WithVolumeMounts(volumeMounts...),
 	)
