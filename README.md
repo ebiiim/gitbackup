@@ -42,6 +42,8 @@ spec:
 
 ## Getting Started
 
+Supported Kubernetes versions: __1.21 or higher__
+
 ### Installation
 
 1. Make sure you have [cert-manager](https://cert-manager.io/) installed, as it is used to generate webhook certificates.
