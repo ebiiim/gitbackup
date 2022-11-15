@@ -9,8 +9,11 @@ PROJECT_ROOT=$(dirname "$(dirname "$SCRIPT")")
 PROJECT_NAME=$(basename "$PROJECT_ROOT")
 
 VERSION=$(git describe --tags --match "v*")
-REGISTRY=${REGISTRY:-"localhost"}
-IMG=$REGISTRY/$PROJECT_NAME-controller:$VERSION
+IMG=$PROJECT_NAME-controller:$VERSION
+REGISTRY=${REGISTRY:-""}
+if [ -n "$REGISTRY" ]; then
+    IMG=$REGISTRY/$PROJECT_NAME-controller:$VERSION
+fi
 DIST_FILE=gitbackup.yaml
 
 cd "$PROJECT_ROOT"
