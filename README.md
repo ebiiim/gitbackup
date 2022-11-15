@@ -1,103 +1,120 @@
-# gitbackup
+# Git Backup Operator
 
-A Kubernetes controller for daily backup of Git repos.
+A [Kubernetes Operator](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/) for scheduled backup of Git repositories.
 
-## Description
+<!-- START doctoc generated TOC please keep comment here to allow auto update -->
+<!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-1. You create a Repository resource.
-2. The controller creates a CronJob resource from it.
-3. The CronJob do the actual work.
+- [Git Backup Operator](#git-backup-operator)
+  - [Overview](#overview)
+  - [Getting Started](#getting-started)
+    - [Installation](#installation)
+    - [Deploy a `Repository` resource](#deploy-a-repository-resource)
+    - [Uninstallation](#uninstallation)
+  - [Developing](#developing)
+
+<!-- END doctoc generated TOC please keep comment here to allow auto update -->
+
+## Overview
+
+1. You create a `Repository` resource.
+2. The controller creates a `CronJob` resource from it.
+3. The `CronJob` does the actual work.
 
 ```yaml
 apiVersion: gitbackup.ebiiim.com/v1beta1
 kind: Repository
 metadata:
-  name: myrepo
+  name: repo1
 spec:
   src: https://github.com/ebiiim/gitbackup
   dst: https://gitlab.com/ebiiim/gitbackup
   schedule: "0 6 * * *"
   gitCredentials:
-    name: mysecret # specify a Secret resource in the same namespace
+    name: repo1-secret # specify a Secret resource in the same namespace
 ```
-
-## Installation
-
-// TODO(user)
-
-```sh
-
-```
-
 
 ## Getting Started
-You’ll need a Kubernetes cluster to run against. You can use [KIND](https://sigs.k8s.io/kind) to get a local cluster for testing, or run against a remote cluster.
-**Note:** Your controller will automatically use the current context in your kubeconfig file (i.e. whatever cluster `kubectl cluster-info` shows).
 
-### Running on the cluster
-1. Install Instances of Custom Resources:
+### Installation
+
+1. Make sure you have [cert-manager](https://cert-manager.io/) installed, as it is used to generate webhook certificates.
 
 ```sh
-kubectl apply -f config/samples/
+kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.10.0/cert-manager.yaml
 ```
 
-2. Build and push your image to the location specified by `IMG`:
+2. Install the controller with the following command. It creates `gitbackup-system` namespace and deploys CRDs, controllers and other resources.
+
+```sh
+# TODO(user)
+kubectl apply -f https://...
+```
+
+### Deploy a `Repository` resource
+
+1. Create a `Secret` resource that contains `.git-credentials`.
 	
 ```sh
-make docker-build docker-push IMG=<some-registry>/gitbackup:tag
+kubectl create secret generic repo1-secret --from-file=$HOME/.git-credentials
 ```
-	
-3. Deploy the controller to the cluster with the image specified by `IMG`:
+
+2. Create a `Repository` resource.
+
+```yaml
+apiVersion: gitbackup.ebiiim.com/v1beta1
+kind: Repository
+metadata:
+  name: repo1
+spec:
+  src: https://github.com/ebiiim/gitbackup
+  dst: https://gitlab.com/ebiiim/gitbackup
+  schedule: "0 6 * * *"
+  gitCredentials:
+    name: repo1-secret
+```
+
+3. Confirm that resources has been created.
+
+```
+$ kubectl get repos
+NAME    AGE
+repo1   5s
+
+$ kubectl get cronjobs
+NAME              SCHEDULE    SUSPEND   ACTIVE   LAST SCHEDULE   AGE
+gitbackup-repo1   0 6 * * *   False     0        <none>          5s
+```
+
+Note: You can test the `CronJob` by manually triggering it.
 
 ```sh
-make deploy IMG=<some-registry>/gitbackup:tag
+kubectl create job --from=cronjob/<name> <job-name>
 ```
 
-### Uninstall CRDs
-To delete the CRDs from the cluster:
+### Uninstallation
+
+1. Delete all `Repository` resources.
 
 ```sh
-make uninstall
+kubectl delete --all repos -A
 ```
 
-### Undeploy controller
-UnDeploy the controller to the cluster:
+2. Delete the Operator.
 
 ```sh
-make undeploy
+# TODO(user)
+kubectl delete -f https://...
 ```
 
-## Contributing
-// TODO(user): Add detailed information on how you would like others to contribute to this project
+## Developing
 
-### How it works
-This project aims to follow the Kubernetes [Operator pattern](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/)
+This Operator uses [Kubebuilder](https://github.com/kubernetes-sigs/kubebuilder), so we basically follow the Kubebuilder way. See the [Kubebuilder Documentation](https://book.kubebuilder.io/introduction.html) for details.
 
-It uses [Controllers](https://kubernetes.io/docs/concepts/architecture/controller/) 
-which provides a reconcile function responsible for synchronizing resources untile the desired state is reached on the cluster 
 
-### Test It Out
-1. Install the CRDs into the cluster:
+Note: You can run it with [KIND](https://sigs.k8s.io/kind) with the following command.
 
 ```sh
-make install
+./hack/dev-kind-reset-cluster.sh
+./hack/dev-kind-deploy.sh
 ```
-
-2. Run your controller (this will run in the foreground, so switch to a new terminal if you want to leave it running):
-
-```sh
-make run
-```
-
-**NOTE:** You can also run this in one step by running: `make install run`
-
-### Modifying the API definitions
-If you are editing the API definitions, generate the manifests such as CRs or CRDs using:
-
-```sh
-make manifests
-```
-
-**NOTE:** Run `make --help` for more information on all potential `make` targets
-
-More information can be found via the [Kubebuilder Documentation](https://book.kubebuilder.io/introduction.html)

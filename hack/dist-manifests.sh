@@ -10,7 +10,7 @@ PROJECT_NAME=$(basename "$PROJECT_ROOT")
 
 VERSION=$(git describe --tags --match "v*")
 IMG=$PROJECT_NAME-controller:$VERSION
-DIST_FILE=install.yaml
+DIST_FILE=gitbackup.yaml
 
 cd "$PROJECT_ROOT"
 
