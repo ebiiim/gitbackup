@@ -157,7 +157,8 @@ func (r *RepositoryReconciler) reconcileCronJob(ctx context.Context, repo v1beta
 	volumes = append(volumes, corev1apply.Volume().
 		WithName("gitconfig").
 		WithConfigMap(corev1apply.ConfigMapVolumeSource().
-			WithName(repo.Spec.GitConfig.Name)),
+			WithName(repo.Spec.GitConfig.Name).
+			WithDefaultMode(256)),
 	)
 	volumeMounts = append(volumeMounts, corev1apply.VolumeMount().
 		WithName("gitconfig").
