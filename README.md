@@ -1,5 +1,11 @@
 # Git Backup Operator
 
+![GitHub](https://img.shields.io/github/license/ebiiim/gitbackup)
+[![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/ebiiim/gitbackup)](https://github.com/ebiiim/gitbackup/releases/latest)
+[![CI](https://github.com/ebiiim/gitbackup/actions/workflows/ci.yaml/badge.svg)](https://github.com/ebiiim/gitbackup/actions/workflows/ci.yaml)
+![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/ebiiim/gitbackup)
+[![Go Report Card](https://goreportcard.com/badge/github.com/ebiiim/gitbackup)](https://goreportcard.com/report/github.com/ebiiim/gitbackup)
+
 A [Kubernetes Operator](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/) for scheduled backup of Git repositories.
 
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
@@ -102,7 +108,7 @@ kubectl delete --all repos -A
 2. Delete the Operator.
 
 ```sh
-kubectl apply -f https://github.com/ebiiim/gitbackup/releases/download/v0.1.0/gitbackup.yaml
+kubectl delete -f https://github.com/ebiiim/gitbackup/releases/download/v0.1.0/gitbackup.yaml
 ```
 
 ## Developing
