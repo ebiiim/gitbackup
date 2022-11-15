@@ -47,8 +47,7 @@ kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/
 2. Install the controller with the following command. It creates `gitbackup-system` namespace and deploys CRDs, controllers and other resources.
 
 ```sh
-# TODO(user)
-kubectl apply -f https://...
+kubectl apply -f https://github.com/ebiiim/gitbackup/releases/download/v0.1.0/gitbackup.yaml
 ```
 
 ### Deploy a `Repository` resource
@@ -103,8 +102,7 @@ kubectl delete --all repos -A
 2. Delete the Operator.
 
 ```sh
-# TODO(user)
-kubectl delete -f https://...
+kubectl apply -f https://github.com/ebiiim/gitbackup/releases/download/v0.1.0/gitbackup.yaml
 ```
 
 ## Developing
