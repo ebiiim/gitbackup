@@ -46,7 +46,7 @@ func TestAPIs(t *testing.T) {
 var _ = BeforeSuite(func() {
 	logf.SetLogger(zap.New(zap.WriteTo(GinkgoWriter), zap.UseDevMode(true)))
 
-	ctx, cancel = context.WithCancel(context.TODO())
+	ctx, cancel = context.WithCancel(context.Background())
 
 	By("bootstrapping test environment")
 	testEnv = &envtest.Environment{
@@ -136,6 +136,7 @@ var _ = Describe("Repository webhook", func() {
 		It("should not create invalid repositories", func() {
 			want := false
 			testValidate(mustOpen("testdata", "validate_wrong_cron.yaml"), want)
+			testValidate(mustOpen("testdata", "validate_wrong_url.yaml"), want)
 		})
 	})
 })

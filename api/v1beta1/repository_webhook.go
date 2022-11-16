@@ -1,6 +1,9 @@
 package v1beta1
 
 import (
+	"errors"
+	"strings"
+
 	cron "github.com/robfig/cron/v3"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
@@ -35,7 +38,7 @@ func (r *Repository) Default() {
 	}
 }
 
-// TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
+// NOTE: change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
 //+kubebuilder:webhook:path=/validate-gitbackup-ebiiim-com-v1beta1-repository,mutating=false,failurePolicy=fail,sideEffects=None,groups=gitbackup.ebiiim.com,resources=repositories,verbs=create;update,versions=v1beta1,name=vrepository.kb.io,admissionReviewVersions=v1
 
 var _ webhook.Validator = &Repository{}
@@ -45,6 +48,9 @@ func (r *Repository) ValidateCreate() error {
 	repositorylog.Info("validate create", "name", r.Name)
 
 	if err := r.validateCron(); err != nil {
+		return err
+	}
+	if err := r.validateURL(); err != nil {
 		return err
 	}
 
@@ -58,6 +64,9 @@ func (r *Repository) ValidateUpdate(old runtime.Object) error {
 	if err := r.validateCron(); err != nil {
 		return err
 	}
+	if err := r.validateURL(); err != nil {
+		return err
+	}
 
 	return nil
 }
@@ -66,11 +75,21 @@ func (r *Repository) ValidateUpdate(old runtime.Object) error {
 func (r *Repository) ValidateDelete() error {
 	repositorylog.Info("validate delete", "name", r.Name)
 
-	// TODO(user): fill in your validation logic upon object deletion.
+	// NOTE: nothing to validate upon object deletion.
 	return nil
 }
 
 func (r *Repository) validateCron() error {
 	_, err := cron.ParseStandard(r.Spec.Schedule)
 	return err
+}
+
+func (r *Repository) validateURL() error {
+	test := func(s string) bool {
+		return !strings.Contains(s, " ")
+	}
+	if !test(r.Spec.Src) || !test(r.Spec.Dst) {
+		return errors.New("invalid src or dst URL")
+	}
+	return nil
 }

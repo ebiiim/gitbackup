@@ -24,10 +24,10 @@ KIND_IMAGE_119="kindest/node:v1.19.16@sha256:476cb3269232888437b61deca013832fee4
 CERT_MANAGER_YAML="https://github.com/cert-manager/cert-manager/releases/download/v1.10.0/cert-manager.yaml"
 
 function run {
-    _kind_image=$1
-    _cert_manager_yaml=$2
+    local kind_image=$1
+    local cert_manager_yaml=$2
 
-    KIND_IMAGE=$_kind_image CERT_MANAGER_YAML=$_cert_manager_yaml ./hack/dev-kind-reset-cluster.sh
+    KIND_IMAGE=$kind_image CERT_MANAGER_YAML=$cert_manager_yaml ./hack/dev-kind-reset-cluster.sh
     sleep 50
 
     kind load docker-image "$IMG" -n "$KIND_CLUSTER_NAME"

@@ -121,24 +121,24 @@ func (r *RepositoryReconciler) reconcileCronJob(ctx context.Context, repo v1beta
 	// generate shell commands
 	srcs := strings.Split(repo.Spec.Src, "/")
 	srcRepoName := srcs[len(srcs)-1]
-	cmdLog := func(s string) string {
-		logPrefix := "echo $(date -Iseconds) gitbackup:"
-		return fmt.Sprintf("%s %s", logPrefix, s)
+	echo := func(format string, a ...any) string {
+		logPrefix := "echo $(date -Iseconds) gitbackup: "
+		return fmt.Sprintf(logPrefix+format, a...)
 	}
-	gitCmd := strings.Join([]string{
-		cmdLog("start"),
-		cmdLog("set .gitconfig"),
+	script := strings.Join([]string{
+		echo("start"),
+		echo("set .gitconfig"),
 		"cp /gitconfig/.gitconfig /root/.gitconfig",
-		cmdLog("set .git-credentials"),
+		echo("set .git-credentials"),
 		"cp /gitcredentials/.git-credentials /root/.git-credentials",
 		"set -e",
-		cmdLog("clone src repo"),
+		echo("clone src repo '%s'", repo.Spec.Src),
 		fmt.Sprintf("git clone --mirror '%s'", repo.Spec.Src),
 		fmt.Sprintf("cd '%s.git'", srcRepoName),
-		cmdLog("push dst repo"),
+		echo("push to dst repo '%s'", repo.Spec.Dst),
 		fmt.Sprintf("git push --mirror '%s'", repo.Spec.Dst),
 		"set +e",
-		cmdLog("completed"),
+		echo("completed"),
 	}, ";")
 
 	// create server-side apply config
@@ -175,7 +175,7 @@ func (r *RepositoryReconciler) reconcileCronJob(ctx context.Context, repo v1beta
 		WithCommand(
 			"/bin/sh",
 			"-c",
-			gitCmd,
+			script,
 		).
 		WithVolumeMounts(volumeMounts...),
 	)
@@ -191,6 +191,10 @@ func (r *RepositoryReconciler) reconcileCronJob(ctx context.Context, repo v1beta
 
 	cronJobSpec := batchv1apply.CronJobSpec().
 		WithSchedule(repo.Spec.Schedule).
+		// Without this setting, CronJobs will stop working after 100 failures (including "suspend: true").
+		WithStartingDeadlineSeconds(4 * 3600).
+		// No need to backup concurrently and git commands can be cancelled.
+		WithConcurrencyPolicy(batchv1.ReplaceConcurrent).
 		WithJobTemplate(batchv1apply.JobTemplateSpec().WithSpec(batchv1apply.JobSpec().
 			WithParallelism(1).
 			WithCompletions(1).

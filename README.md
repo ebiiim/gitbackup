@@ -93,7 +93,7 @@ NAME              SCHEDULE    SUSPEND   ACTIVE   LAST SCHEDULE   AGE
 gitbackup-repo1   0 6 * * *   False     0        <none>          5s
 ```
 
-Note: You can test the `CronJob` by manually triggering it.
+NOTE: You can test the `CronJob` by manually triggering it.
 
 ```sh
 kubectl create job --from=cronjob/<name> <job-name>
@@ -118,7 +118,7 @@ kubectl delete -f https://github.com/ebiiim/gitbackup/releases/download/v0.1.0/g
 This Operator uses [Kubebuilder](https://github.com/kubernetes-sigs/kubebuilder), so we basically follow the Kubebuilder way. See the [Kubebuilder Documentation](https://book.kubebuilder.io/introduction.html) for details.
 
 
-Note: You can run it with [KIND](https://sigs.k8s.io/kind) with the following command.
+NOTE: You can run it with [KIND](https://sigs.k8s.io/kind) with the following command.
 
 ```sh
 ./hack/dev-kind-reset-cluster.sh
