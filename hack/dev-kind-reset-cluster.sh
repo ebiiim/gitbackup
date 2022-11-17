@@ -11,6 +11,8 @@ PROJECT_NAME=$(basename "$PROJECT_ROOT")
 KIND_CLUSTER_NAME=$PROJECT_NAME
 KIND_IMAGE=${KIND_IMAGE:-"kindest/node:v1.25.3@sha256:f52781bc0d7a19fb6c405c2af83abfeb311f130707a0e219175677e366cc45d1"}
 CERT_MANAGER_YAML=${CERT_MANAGER_YAML:-"https://github.com/cert-manager/cert-manager/releases/download/v1.10.0/cert-manager.yaml"}
+METRICS_SERVER_YAML=${METRICS_SERVER_YAML:-"https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.6.1/components.yaml"}
+METRICS_SERVER_PATCH=${METRICS_SERVER_PATCH:-'''[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--kubelet-insecure-tls"}]'''}
 
 cd "$PROJECT_ROOT"
 
@@ -32,3 +34,5 @@ nodes:
 EOF
 
 kubectl apply -f "$CERT_MANAGER_YAML"
+kubectl apply -f "$METRICS_SERVER_YAML"
+kubectl patch -n kube-system deployment metrics-server --type=json -p "$METRICS_SERVER_PATCH"

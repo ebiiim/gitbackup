@@ -101,13 +101,7 @@ kubectl create job --from=cronjob/<name> <job-name>
 
 ### Uninstallation
 
-1. Delete all `Repository` resources.
-
-```sh
-kubectl delete --all repos -A
-```
-
-2. Delete the Operator.
+1. Delete the Operator and all `Repository` resources.
 
 ```sh
 kubectl delete -f https://github.com/ebiiim/gitbackup/releases/download/v0.1.0/gitbackup.yaml
@@ -118,7 +112,7 @@ kubectl delete -f https://github.com/ebiiim/gitbackup/releases/download/v0.1.0/g
 This Operator uses [Kubebuilder](https://github.com/kubernetes-sigs/kubebuilder), so we basically follow the Kubebuilder way. See the [Kubebuilder Documentation](https://book.kubebuilder.io/introduction.html) for details.
 
 
-NOTE: You can run it with [KIND](https://sigs.k8s.io/kind) with the following command.
+NOTE: You can run it with [kind](https://kind.sigs.k8s.io/) with the following command.
 
 ```sh
 ./hack/dev-kind-reset-cluster.sh
