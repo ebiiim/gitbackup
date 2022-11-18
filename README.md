@@ -11,20 +11,19 @@ A [Kubernetes Operator](https://kubernetes.io/docs/concepts/extend-kubernetes/op
 <!-- START doctoc generated TOC please keep comment here to allow auto update -->
 <!-- DON'T EDIT THIS SECTION, INSTEAD RE-RUN doctoc TO UPDATE -->
 
-- [Git Backup Operator](#git-backup-operator)
-  - [Overview](#overview)
-  - [Getting Started](#getting-started)
-    - [Installation](#installation)
-    - [Deploy a `Repository` resource](#deploy-a-repository-resource)
-    - [Uninstallation](#uninstallation)
-  - [Developing](#developing)
+- [Overview](#overview)
+- [Getting Started](#getting-started)
+  - [Installation](#installation)
+  - [Deploy a `Repository` resource](#deploy-a-repository-resource)
+  - [Uninstallation](#uninstallation)
+- [Developing](#developing)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
 ## Overview
 
 1. You create a `Repository` resource.
-2. The controller creates a `CronJob` resource from it.
+2. The Operator creates a `CronJob` resource from it.
 3. The `CronJob` does the actual work.
 
 ```yaml
@@ -46,13 +45,13 @@ Supported Kubernetes versions: __1.21 or higher__
 
 ### Installation
 
-1. Make sure you have [cert-manager](https://cert-manager.io/) installed, as it is used to generate webhook certificates.
+Make sure you have [cert-manager](https://cert-manager.io/) installed, as it is used to generate webhook certificates.
 
 ```sh
 kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.10.0/cert-manager.yaml
 ```
 
-2. Install the controller with the following command. It creates `gitbackup-system` namespace and deploys CRDs, controllers and other resources.
+Then install the Operator with the following command. It creates `gitbackup-system` namespace and deploys CRDs, controllers and other resources.
 
 ```sh
 kubectl apply -f https://github.com/ebiiim/gitbackup/releases/download/v0.1.0/gitbackup.yaml
@@ -60,13 +59,13 @@ kubectl apply -f https://github.com/ebiiim/gitbackup/releases/download/v0.1.0/gi
 
 ### Deploy a `Repository` resource
 
-1. Create a `Secret` resource that contains `.git-credentials`.
+First, create a `Secret` resource that contains `.git-credentials`.
 	
 ```sh
 kubectl create secret generic repo1-secret --from-file=$HOME/.git-credentials
 ```
 
-2. Create a `Repository` resource.
+Next, create a `Repository` resource.
 
 ```yaml
 apiVersion: gitbackup.ebiiim.com/v1beta1
@@ -81,7 +80,7 @@ spec:
     name: repo1-secret
 ```
 
-3. Confirm that resources has been created.
+Finally, confirm that resources has been created.
 
 ```
 $ kubectl get repos
@@ -101,7 +100,7 @@ kubectl create job --from=cronjob/<name> <job-name>
 
 ### Uninstallation
 
-1. Delete the Operator and all `Repository` resources.
+Delete the Operator and resources with the following command.
 
 ```sh
 kubectl delete -f https://github.com/ebiiim/gitbackup/releases/download/v0.1.0/gitbackup.yaml
