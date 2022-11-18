@@ -23,6 +23,10 @@ import (
 	v1beta1 "github.com/ebiiim/gitbackup/api/v1beta1"
 )
 
+const (
+	ControllerName = v1beta1.OperatorName + "-repository-controller"
+)
+
 // RepositoryReconciler reconciles a Repository object
 type RepositoryReconciler struct {
 	client.Client
@@ -218,9 +222,9 @@ func (r *RepositoryReconciler) reconcileCronJob(ctx context.Context, repo v1beta
 
 	cronJob := batchv1apply.CronJob(repo.GetOwnedCronJobName(), repo.Namespace).
 		WithLabels(map[string]string{
-			"app.kubernetes.io/name":       v1beta1.AppName,
+			"app.kubernetes.io/name":       v1beta1.OperatorName,
 			"app.kubernetes.io/instance":   repo.Name,
-			"app.kubernetes.io/created-by": v1beta1.ControllerName,
+			"app.kubernetes.io/created-by": ControllerName,
 		}).
 		WithOwnerReferences(ownerReference).
 		WithSpec(cronJobSpec)
@@ -233,7 +237,7 @@ func (r *RepositoryReconciler) reconcileCronJob(ctx context.Context, repo v1beta
 		lg.Error(err, "unable to get current CronJob")
 		return err
 	}
-	curApplyConfig, err := batchv1apply.ExtractCronJob(&cur, v1beta1.ControllerName)
+	curApplyConfig, err := batchv1apply.ExtractCronJob(&cur, ControllerName)
 	if err != nil {
 		lg.Error(err, "unable to extract current CronJob")
 		return err
@@ -251,7 +255,7 @@ func (r *RepositoryReconciler) reconcileCronJob(ctx context.Context, repo v1beta
 		Object: obj,
 	}
 	if err := r.Patch(ctx, patch, client.Apply, &client.PatchOptions{
-		FieldManager: v1beta1.ControllerName,
+		FieldManager: ControllerName,
 		Force:        pointer.Bool(true),
 	}); err != nil {
 		lg.Error(err, "unable to create or update CronJob")

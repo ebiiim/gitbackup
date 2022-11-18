@@ -172,7 +172,7 @@ var _ = Describe("Repository controller", func() {
 
 		cj := batchv1.CronJob{}
 		Eventually(func() error {
-			return k8sClient.Get(ctx, client.ObjectKey{Namespace: testNS, Name: v1beta1.AppName + "-" + repo.Name}, &cj)
+			return k8sClient.Get(ctx, client.ObjectKey{Namespace: testNS, Name: v1beta1.OperatorName + "-" + repo.Name}, &cj)
 		}).Should(Succeed())
 		Expect(cj.Spec.Schedule).Should(Equal(repo.Spec.Schedule))
 	})
@@ -193,7 +193,7 @@ var _ = Describe("Repository controller", func() {
 
 		cj := batchv1.CronJob{}
 		Eventually(func() error {
-			return k8sClient.Get(ctx, client.ObjectKey{Namespace: testNS, Name: v1beta1.AppName + "-" + repo.Name}, &cj)
+			return k8sClient.Get(ctx, client.ObjectKey{Namespace: testNS, Name: v1beta1.OperatorName + "-" + repo.Name}, &cj)
 		}).Should(Succeed())
 		Expect(cj.Spec.Schedule).Should(Equal(repo.Spec.Schedule))
 	})

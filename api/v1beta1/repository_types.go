@@ -6,11 +6,10 @@ import (
 )
 
 const (
-	AppName         = "gitbackup"
-	ControllerName  = AppName + "-repository-controller"
+	OperatorName    = "gitbackup"
 	DefaultGitImage = "alpine/git:2.36.2"
 
-	defaultGitConfigPrefix = AppName + "-gitconfig-"
+	defaultGitConfigPrefix = OperatorName + "-gitconfig-"
 )
 
 func (r Repository) GetOwnedConfigMapName() string {
@@ -18,7 +17,7 @@ func (r Repository) GetOwnedConfigMapName() string {
 }
 
 func (r Repository) GetOwnedCronJobName() string {
-	return AppName + "-" + r.Name
+	return OperatorName + "-" + r.Name
 }
 
 // RepositorySpec defines the desired state of Repository
