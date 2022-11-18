@@ -51,7 +51,7 @@ Make sure you have [cert-manager](https://cert-manager.io/) installed, as it is 
 kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.10.0/cert-manager.yaml
 ```
 
-Then install the Operator with the following command. It creates `gitbackup-system` namespace and deploys CRDs, controllers and other resources.
+Install the Operator with the following command. It creates `gitbackup-system` namespace and deploys CRDs, controllers and other resources.
 
 ```sh
 kubectl apply -f https://github.com/ebiiim/gitbackup/releases/download/v0.1.0/gitbackup.yaml
