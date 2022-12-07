@@ -1,22 +1,25 @@
 #!/usr/bin/env bash
 
-set -o errexit
-set -o nounset
-set -o pipefail
+# scripts must be run from project root
+. hack/1-bin.sh || exit 1
 
-SCRIPT=$(realpath "$0")
-PROJECT_ROOT=$(dirname "$(dirname "$SCRIPT")")
-PROJECT_NAME=$(basename "$PROJECT_ROOT")
+# consts
 
-KIND_CLUSTER_NAME=$PROJECT_NAME
 VERSION=$(git describe --tags --match "v*")
 IMG=$PROJECT_NAME-controller:$VERSION
 
-cd "$PROJECT_ROOT"
+KIND_CLUSTER_NAME=$PROJECT_NAME
+CLUSTER_NAME=kind-$KIND_CLUSTER_NAME
+
+# main
+
+"$KUBECTL" config use-context "$CLUSTER_NAME"
 
 make
+make manifests
+
 make docker-build IMG="$IMG"
-kind load docker-image "$IMG" -n "$KIND_CLUSTER_NAME"
+"$KIND" load docker-image "$IMG" -n "$KIND_CLUSTER_NAME"
 
 make undeploy || true
 make deploy IMG="$IMG"

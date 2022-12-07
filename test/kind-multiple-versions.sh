@@ -1,14 +1,10 @@
 #!/usr/bin/env bash
 
-set -o errexit
-set -o nounset
-set -o pipefail
+# scripts must be run from project root
+. hack/0-env.sh || exit 1
 
-SCRIPT=$(realpath "$0")
-PROJECT_ROOT=$(dirname "$(dirname "$SCRIPT")")
-PROJECT_NAME=$(basename "$PROJECT_ROOT")
+# consts
 
-KIND_CLUSTER_NAME=$PROJECT_NAME
 VERSION=$(git describe --tags --match "v*")
 IMG=$PROJECT_NAME-controller:$VERSION
 
@@ -21,33 +17,35 @@ KIND_IMAGE_121="kindest/node:v1.21.14@sha256:9d9eb5fb26b4fbc0c6d95fa8c790414f975
 KIND_IMAGE_120="kindest/node:v1.20.15@sha256:a32bf55309294120616886b5338f95dd98a2f7231519c7dedcec32ba29699394"
 KIND_IMAGE_119="kindest/node:v1.19.16@sha256:476cb3269232888437b61deca013832fee41f9f074f9bed79f57e4280f7c48b7"
 
+# main
+
 # Usage: run <KIND_IMAGE>
 function run {
     local kind_image=$1
+    local cluster="$PROJECT_NAME"
 
     KIND_IMAGE=$kind_image ./hack/dev-kind-reset-cluster.sh
     sleep 50
 
-    kind load docker-image "$IMG" -n "$KIND_CLUSTER_NAME"
+    "$KIND" load docker-image "$IMG" -n "$cluster"
     make deploy IMG="$IMG"
     sleep 30
 
     ./hack/dev-kind-samples.sh
     sleep 5
 
-    if test "$(kubectl get cronjob | wc -l)" -eq 0; then
-        kubectl get pod -A
-        kubectl get repo
-        kubectl get cronjob
-        kubectl get configmap
-        kubectl get secret
+    "$KUBECTL" get pod -A
+    "$KUBECTL" get repo
+    "$KUBECTL" get cronjob
+    "$KUBECTL" get configmap
+    "$KUBECTL" get secret
+
+    if test "$("$KUBECTL" get cronjob | wc -l)" -eq 0; then
         exit 1;
     else
         echo "OK"
     fi
 }
-
-cd "$PROJECT_ROOT"
 
 make docker-build IMG="$IMG"
 

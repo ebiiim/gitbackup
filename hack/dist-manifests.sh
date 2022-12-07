@@ -1,12 +1,9 @@
 #!/usr/bin/env bash
 
-set -o errexit
-set -o nounset
-set -o pipefail
+# scripts must be run from project root
+. hack/0-env.sh || exit 1
 
-SCRIPT=$(realpath "$0")
-PROJECT_ROOT=$(dirname "$(dirname "$SCRIPT")")
-PROJECT_NAME=$(basename "$PROJECT_ROOT")
+# consts
 
 VERSION=$(git describe --tags --match "v*")
 IMG=$PROJECT_NAME-controller:$VERSION
@@ -15,8 +12,6 @@ if [ -n "$REGISTRY" ]; then
     IMG=$REGISTRY/$PROJECT_NAME-controller:$VERSION
 fi
 DIST_FILE=gitbackup.yaml
-
-cd "$PROJECT_ROOT"
 
 make kustomize
 

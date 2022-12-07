@@ -1,38 +1,16 @@
 #!/usr/bin/env bash
 
-set -o errexit
-set -o nounset
-set -o pipefail
+# scripts must be run from project root
+. hack/2-lib.sh || exit 1
 
-SCRIPT=$(realpath "$0")
-PROJECT_ROOT=$(dirname "$(dirname "$SCRIPT")")
-PROJECT_NAME=$(basename "$PROJECT_ROOT")
+# consts
 
-KIND_CLUSTER_NAME=$PROJECT_NAME
 KIND_IMAGE=${KIND_IMAGE:-"kindest/node:v1.25.3@sha256:f52781bc0d7a19fb6c405c2af83abfeb311f130707a0e219175677e366cc45d1"}
-CERT_MANAGER_YAML=${CERT_MANAGER_YAML:-"https://github.com/cert-manager/cert-manager/releases/download/v1.10.0/cert-manager.yaml"}
-METRICS_SERVER_YAML=${METRICS_SERVER_YAML:-"https://github.com/kubernetes-sigs/metrics-server/releases/download/v0.6.1/components.yaml"}
-METRICS_SERVER_PATCH=${METRICS_SERVER_PATCH:-'''[{"op":"add","path":"/spec/template/spec/containers/0/args/-","value":"--kubelet-insecure-tls"}]'''}
 
-cd "$PROJECT_ROOT"
+# main
 
-sudo systemctl start docker || sudo service docker start || true
-sleep 1
+cluster=$PROJECT_NAME
 
-# https://kind.sigs.k8s.io/docs/user/known-issues/#pod-errors-due-to-too-many-open-files
-sudo sysctl fs.inotify.max_user_watches=524288
-sudo sysctl fs.inotify.max_user_instances=512
+lib::start-docker
 
-kind delete cluster --name "$KIND_CLUSTER_NAME"
-
-kind create cluster --name "$KIND_CLUSTER_NAME" --image="$KIND_IMAGE" --config=- <<EOF
-kind: Cluster
-apiVersion: kind.x-k8s.io/v1alpha4
-nodes:
-- role: control-plane
-- role: worker
-EOF
-
-kubectl apply -f "$CERT_MANAGER_YAML"
-kubectl apply -f "$METRICS_SERVER_YAML"
-kubectl patch -n kube-system deployment metrics-server --type=json -p "$METRICS_SERVER_PATCH"
+lib::create-cluster "$cluster" "$KIND_IMAGE"
