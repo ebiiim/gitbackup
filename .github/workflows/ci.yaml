@@ -15,3 +15,6 @@ jobs:
         with:
           go-version-file: go.mod
       - run: make test
+      - name: "coverage: remove generated files from cover.out"
+        run: sed -i -e '/.*_generated.*\.go/d'  cover.out
+      - uses: codecov/codecov-action@v3
