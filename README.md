@@ -1,10 +1,11 @@
 # Git Backup Operator
 
-![GitHub](https://img.shields.io/github/license/ebiiim/gitbackup)
+[![GitHub](https://img.shields.io/github/license/ebiiim/gitbackup)](https://github.com/ebiiim/gitbackup/blob/main/LICENSE)
 [![GitHub release (latest SemVer)](https://img.shields.io/github/v/release/ebiiim/gitbackup)](https://github.com/ebiiim/gitbackup/releases/latest)
 [![CI](https://github.com/ebiiim/gitbackup/actions/workflows/ci.yaml/badge.svg)](https://github.com/ebiiim/gitbackup/actions/workflows/ci.yaml)
 ![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/ebiiim/gitbackup)
 [![Go Report Card](https://goreportcard.com/badge/github.com/ebiiim/gitbackup)](https://goreportcard.com/report/github.com/ebiiim/gitbackup)
+[![codecov](https://codecov.io/gh/ebiiim/gitbackup/branch/main/graph/badge.svg)](https://codecov.io/gh/ebiiim/gitbackup)
 
 A [Kubernetes Operator](https://kubernetes.io/docs/concepts/extend-kubernetes/operator/) for scheduled backup of Git repositories.
 
@@ -17,6 +18,8 @@ A [Kubernetes Operator](https://kubernetes.io/docs/concepts/extend-kubernetes/op
   - [Deploy a `Repository` resource](#deploy-a-repository-resource)
   - [Uninstallation](#uninstallation)
 - [Developing](#developing)
+  - [Prerequisites](#prerequisites)
+  - [Run development clusters with kind](#run-development-clusters-with-kind)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -45,13 +48,15 @@ Supported Kubernetes versions: __1.21 or higher__
 
 ### Installation
 
-Make sure you have [cert-manager](https://cert-manager.io/) installed, as it is used to generate webhook certificates.
+Make sure you have [cert-manager](https://cert-manager.io/) deployed, as it is used to generate webhook certificates.
 
 ```sh
 kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/v1.10.0/cert-manager.yaml
 ```
 
-Install the Operator with the following command. It creates `gitbackup-system` namespace and deploys CRDs, controllers and other resources.
+> ⚠️ You may have to wait a second for cert-manager to be ready.
+
+Deploy the Operator with the following command. It creates `gitbackup-system` namespace and deploys CRDs, controllers and other resources.
 
 ```sh
 kubectl apply -f https://github.com/ebiiim/gitbackup/releases/download/v0.1.0/gitbackup.yaml
@@ -110,10 +115,18 @@ kubectl delete -f https://github.com/ebiiim/gitbackup/releases/download/v0.1.0/g
 
 This Operator uses [Kubebuilder](https://github.com/kubernetes-sigs/kubebuilder), so we basically follow the Kubebuilder way. See the [Kubebuilder Documentation](https://book.kubebuilder.io/introduction.html) for details.
 
+### Prerequisites
 
-NOTE: You can run it with [kind](https://kind.sigs.k8s.io/) with the following command.
+Make sure you have the following tools installed:
+
+- Git
+- Make
+- Go
+- Docker
+
+### Run development clusters with [kind](https://kind.sigs.k8s.io/)
 
 ```sh
-./hack/dev-kind-reset-cluster.sh
-./hack/dev-kind-deploy.sh
+./hack/dev-kind-reset-clusters.sh # create a K8s cluster `kind-gitbackup`
+./hack/dev-kind-deploy.sh # build and deploy the Operator
 ```
