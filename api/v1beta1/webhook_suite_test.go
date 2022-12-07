@@ -132,11 +132,14 @@ var _ = Describe("Repository webhook", func() {
 			want := true
 			testValidate(mustOpen("testdata", "validate_all.yaml"), want)
 			testValidate(mustOpen("testdata", "validate_minimal.yaml"), want)
+			_ = want
 		})
 		It("should not create invalid repositories", func() {
 			want := false
 			testValidate(mustOpen("testdata", "validate_wrong_cron.yaml"), want)
 			testValidate(mustOpen("testdata", "validate_wrong_url.yaml"), want)
+			testValidate(mustOpen("testdata", "validate_wrong_url2.yaml"), want)
+			_ = want
 		})
 	})
 })
@@ -158,6 +161,9 @@ func testMutate(rIn, rWant io.Reader) {
 	Expect(err).NotTo(HaveOccurred())
 
 	Expect(got.Spec).Should(Equal(want.Spec))
+
+	err = k8sClient.Delete(ctx2, &got)
+	Expect(err).NotTo(HaveOccurred())
 }
 
 func testValidate(rIn io.Reader, shouldBeValid bool) {
@@ -173,6 +179,11 @@ func testValidate(rIn io.Reader, shouldBeValid bool) {
 		Expect(err).NotTo(HaveOccurred(), "Data: %+v", &in)
 	} else {
 		Expect(err).To(HaveOccurred(), "Data: %#v", &in)
+	}
+
+	if shouldBeValid {
+		err = k8sClient.Delete(ctx2, &in)
+		Expect(err).NotTo(HaveOccurred())
 	}
 }
 

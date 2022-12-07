@@ -1,0 +1,9 @@
+apiVersion: gitbackup.ebiiim.com/v1beta1
+kind: Repository
+metadata:
+  namespace: default
+  name: testrepo-5
+spec:
+  src: https://example.com/src
+  dst: https://examp e.com/dst
+  schedule: "0 6 * *"

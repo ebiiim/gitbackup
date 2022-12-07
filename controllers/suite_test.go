@@ -72,6 +72,8 @@ var _ = AfterSuite(func() {
 })
 
 var (
+	waitShort = func() { time.Sleep(300 * time.Millisecond) }
+	waitLong  = func() { time.Sleep(2000 * time.Millisecond) }
 	testNS    = "default"
 	testRepo1 = v1beta1.Repository{
 		ObjectMeta: metav1.ObjectMeta{
@@ -97,16 +99,20 @@ var (
 			Namespace: testNS,
 		},
 		Spec: v1beta1.RepositorySpec{
-			Src:             "https://example.com/src",
-			Dst:             "https://example.com/dst",
-			Schedule:        "0 6 * * *",
-			TimeZone:        nil,
-			GitImage:        pointer.String(v1beta1.DefaultGitImage),
-			ImagePullSecret: nil,
+			Src:      "https://example.com/src",
+			Dst:      "https://example.com/dst",
+			Schedule: "0 6 * * *",
+			TimeZone: pointer.String("Asia/Tokyo"),
+			GitImage: pointer.String(v1beta1.DefaultGitImage),
+			ImagePullSecret: &corev1.LocalObjectReference{
+				Name: "user-specified-image-pull-secret",
+			},
 			GitConfig: &corev1.LocalObjectReference{
 				Name: "user-created-cm",
 			},
-			GitCredentials: nil,
+			GitCredentials: &corev1.LocalObjectReference{
+				Name: "user-specified-git-secret",
+			},
 		},
 	}
 )
@@ -127,7 +133,7 @@ var _ = Describe("Repository controller", func() {
 		Expect(err).NotTo(HaveOccurred())
 		err = k8sClient.DeleteAllOf(ctx, &corev1.ConfigMap{}, client.InNamespace(testNS))
 		Expect(err).NotTo(HaveOccurred())
-		time.Sleep(100 * time.Millisecond)
+		waitShort()
 
 		mgr, err := ctrl.NewManager(cfg, ctrl.Options{
 			Scheme: scheme.Scheme,
@@ -147,12 +153,12 @@ var _ = Describe("Repository controller", func() {
 				panic(err)
 			}
 		}()
-		time.Sleep(100 * time.Millisecond)
+		waitShort()
 	})
 
 	AfterEach(func() {
 		cncl() // stop the mgr
-		time.Sleep(100 * time.Millisecond)
+		waitShort()
 	})
 
 	It("should create CronJob and ConfigMap", func() {
