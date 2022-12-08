@@ -21,6 +21,7 @@ func TestRepository_GetOwnedConfigMapName(t *testing.T) {
 		want   string
 	}{
 		{"a", fields{ObjectMeta: metav1.ObjectMeta{Name: "a"}}, "gitbackup-gitconfig-a"},
+		{"b-c", fields{ObjectMeta: metav1.ObjectMeta{Name: "b-c"}}, "gitbackup-gitconfig-b-c"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -50,6 +51,7 @@ func TestRepository_GetOwnedCronJobName(t *testing.T) {
 		want   string
 	}{
 		{"a", fields{ObjectMeta: metav1.ObjectMeta{Name: "a"}}, "gitbackup-a"},
+		{"b-c", fields{ObjectMeta: metav1.ObjectMeta{Name: "b-c"}}, "gitbackup-b-c"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

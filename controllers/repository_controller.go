@@ -97,6 +97,7 @@ func (r *RepositoryReconciler) reconcileGitConfig(ctx context.Context, repo v1be
 	})
 
 	if err != nil {
+		// NOTE: A ConfigMap with the same name as the default GitConfig cm may exist
 		lg.Error(err, "unable to create or update default GitConfig cm")
 	}
 

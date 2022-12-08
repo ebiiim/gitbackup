@@ -35,10 +35,69 @@ spec:
           spec:
             description: CollectionSpec defines the desired state of Collection
             properties:
-              foo:
-                description: Foo is an example field of Collection. Edit collection_types.go
-                  to remove/update
+              gitConfig:
+                description: GitConfig specifies the name of the configmap resource
+                  in the same namespace used to mount .git-config Note that "[credential]\nhelper=store"
+                  is required to use GitCredentials.
+                properties:
+                  name:
+                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      TODO: Add other useful fields. apiVersion, kind, uid?'
+                    type: string
+                type: object
+                x-kubernetes-map-type: atomic
+              gitCredentials:
+                description: GitCredentials specifies the name of the Secret in the
+                  same namespace used to mount .git-credentials
+                properties:
+                  name:
+                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      TODO: Add other useful fields. apiVersion, kind, uid?'
+                    type: string
+                type: object
+                x-kubernetes-map-type: atomic
+              gitImage:
+                description: GitImage specifies the container image to run.
                 type: string
+              imagePullSecret:
+                description: ImagePullSecret specifies the name of the Secret in the
+                  same namespace used to pull the GitImage.
+                properties:
+                  name:
+                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      TODO: Add other useful fields. apiVersion, kind, uid?'
+                    type: string
+                type: object
+                x-kubernetes-map-type: atomic
+              repos:
+                description: Repos specifies repositories to backup.
+                items:
+                  properties:
+                    dst:
+                      description: Dst specifies the destination repository in URL
+                        format.
+                      type: string
+                    name:
+                      description: 'Name specifies the name for the repository. (default:
+                        the last element of `Src`)'
+                      type: string
+                    src:
+                      description: Src specifies the source repository in URL format.
+                      type: string
+                  required:
+                  - dst
+                  - src
+                  type: object
+                type: array
+              schedule:
+                description: Schedule in Cron format.
+                type: string
+              timeZone:
+                description: 'TimeZone in TZ database name. See also: https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/#time-zones'
+                type: string
+            required:
+            - repos
+            - schedule
             type: object
           status:
             description: CollectionStatus defines the observed state of Collection

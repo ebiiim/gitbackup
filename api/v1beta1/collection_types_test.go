@@ -1,0 +1,86 @@
+package v1beta1_test
+
+import (
+	"reflect"
+	"testing"
+
+	v1beta1 "github.com/ebiiim/gitbackup/api/v1beta1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/utils/pointer"
+)
+
+func TestCollection_GetOwnedConfigMapName(t *testing.T) {
+	type fields struct {
+		TypeMeta   metav1.TypeMeta
+		ObjectMeta metav1.ObjectMeta
+		Spec       v1beta1.CollectionSpec
+		Status     v1beta1.CollectionStatus
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   string
+	}{
+		{"a", fields{ObjectMeta: metav1.ObjectMeta{Name: "a"}}, "gitbackup-gitconfig-collection-a"},
+		{"b-c", fields{ObjectMeta: metav1.ObjectMeta{Name: "b-c"}}, "gitbackup-gitconfig-collection-b-c"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := v1beta1.Collection{
+				TypeMeta:   tt.fields.TypeMeta,
+				ObjectMeta: tt.fields.ObjectMeta,
+				Spec:       tt.fields.Spec,
+				Status:     tt.fields.Status,
+			}
+			if got := c.GetOwnedConfigMapName(); got != tt.want {
+				t.Errorf("Collection.GetOwnedConfigMapName() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func TestCollection_GetOwnedRepositoryNames(t *testing.T) {
+	type fields struct {
+		TypeMeta   metav1.TypeMeta
+		ObjectMeta metav1.ObjectMeta
+		Spec       v1beta1.CollectionSpec
+		Status     v1beta1.CollectionStatus
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		want   []string
+	}{
+		{"a/foo", fields{ObjectMeta: metav1.ObjectMeta{Name: "a"}, Spec: v1beta1.CollectionSpec{
+			Repos: []v1beta1.CollectionRepoURL{
+				{Name: pointer.String("foo"), Src: "http://example.com/hoge/foo", Dst: "http://example.com/fuga/foo"},
+			},
+		}}, []string{
+			"gitbackup-a-foo",
+		}},
+		{"b-c/foo,bar,baz", fields{ObjectMeta: metav1.ObjectMeta{Name: "b-c"}, Spec: v1beta1.CollectionSpec{
+			Repos: []v1beta1.CollectionRepoURL{
+				{Name: pointer.String("foo"), Src: "http://example.com/hoge/foo", Dst: "http://example.com/fuga/foo"},
+				{Name: pointer.String("bar"), Src: "http://example.com/hoge/barbarbar", Dst: "http://example.com/fuga/barbarbar"},
+				{Name: nil, Src: "http://example.com/hoge/baz", Dst: "http://example.com/fuga/bazbazbaz"},
+			},
+		}}, []string{
+			"gitbackup-b-c-foo",
+			"gitbackup-b-c-bar",
+			"gitbackup-b-c-baz",
+		}},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			c := v1beta1.Collection{
+				TypeMeta:   tt.fields.TypeMeta,
+				ObjectMeta: tt.fields.ObjectMeta,
+				Spec:       tt.fields.Spec,
+				Status:     tt.fields.Status,
+			}
+			if got := c.GetOwnedRepositoryNames(); !reflect.DeepEqual(got, tt.want) {
+				t.Errorf("Collection.GetOwnedRepositoryNames() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
