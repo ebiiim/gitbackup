@@ -11,6 +11,26 @@ webhooks:
     service:
       name: webhook-service
       namespace: system
+      path: /mutate-gitbackup-ebiiim-com-v1beta1-collection
+  failurePolicy: Fail
+  name: mcollection.kb.io
+  rules:
+  - apiGroups:
+    - gitbackup.ebiiim.com
+    apiVersions:
+    - v1beta1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - collections
+  sideEffects: None
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
       path: /mutate-gitbackup-ebiiim-com-v1beta1-repository
   failurePolicy: Fail
   name: mrepository.kb.io
@@ -32,6 +52,26 @@ metadata:
   creationTimestamp: null
   name: validating-webhook-configuration
 webhooks:
+- admissionReviewVersions:
+  - v1
+  clientConfig:
+    service:
+      name: webhook-service
+      namespace: system
+      path: /validate-gitbackup-ebiiim-com-v1beta1-collection
+  failurePolicy: Fail
+  name: vcollection.kb.io
+  rules:
+  - apiGroups:
+    - gitbackup.ebiiim.com
+    apiVersions:
+    - v1beta1
+    operations:
+    - CREATE
+    - UPDATE
+    resources:
+    - collections
+  sideEffects: None
 - admissionReviewVersions:
   - v1
   clientConfig:
