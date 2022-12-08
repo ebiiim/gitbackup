@@ -1,0 +1,27 @@
+# permissions for end users to view collections.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: clusterrole
+    app.kubernetes.io/instance: collection-viewer-role
+    app.kubernetes.io/component: rbac
+    app.kubernetes.io/created-by: gitbackup
+    app.kubernetes.io/part-of: gitbackup
+    app.kubernetes.io/managed-by: kustomize
+  name: collection-viewer-role
+rules:
+- apiGroups:
+  - gitbackup.ebiiim.com
+  resources:
+  - collections
+  verbs:
+  - get
+  - list
+  - watch
+- apiGroups:
+  - gitbackup.ebiiim.com
+  resources:
+  - collections/status
+  verbs:
+  - get

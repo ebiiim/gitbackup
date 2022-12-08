@@ -1,0 +1,12 @@
+apiVersion: gitbackup.ebiiim.com/v1beta1
+kind: Collection
+metadata:
+  labels:
+    app.kubernetes.io/name: collection
+    app.kubernetes.io/instance: collection-sample
+    app.kubernetes.io/part-of: gitbackup
+    app.kubernetes.io/managed-by: kustomize
+    app.kubernetes.io/created-by: gitbackup
+  name: collection-sample
+spec:
+  # TODO(user): Add fields here
