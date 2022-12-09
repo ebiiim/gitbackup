@@ -72,8 +72,7 @@ var _ = AfterSuite(func() {
 })
 
 var (
-	waitShort = func() { time.Sleep(300 * time.Millisecond) }
-	waitLong  = func() { time.Sleep(2000 * time.Millisecond) }
+	wait      = func() { time.Sleep(100 * time.Millisecond) }
 	testNS    = "default"
 	testRepo1 = v1beta1.Repository{
 		ObjectMeta: metav1.ObjectMeta{
@@ -131,7 +130,24 @@ var _ = Describe("Repository controller", func() {
 		Expect(err).NotTo(HaveOccurred())
 		err = k8sClient.DeleteAllOf(ctx, &corev1.ConfigMap{}, client.InNamespace(testNS))
 		Expect(err).NotTo(HaveOccurred())
-		waitShort()
+		Eventually(func() int {
+			var objs v1beta1.RepositoryList
+			err = k8sClient.List(ctx, &objs, client.InNamespace(testNS))
+			Expect(err).NotTo(HaveOccurred())
+			return len(objs.Items)
+		}).Should(Equal(0))
+		Eventually(func() int {
+			var objs batchv1.CronJobList
+			err = k8sClient.List(ctx, &objs, client.InNamespace(testNS))
+			Expect(err).NotTo(HaveOccurred())
+			return len(objs.Items)
+		}).Should(Equal(0))
+		Eventually(func() int {
+			var objs corev1.ConfigMapList
+			err = k8sClient.List(ctx, &objs, client.InNamespace(testNS))
+			Expect(err).NotTo(HaveOccurred())
+			return len(objs.Items)
+		}).Should(Equal(0))
 
 		mgr, err := ctrl.NewManager(cfg, ctrl.Options{
 			Scheme: scheme.Scheme,
@@ -151,12 +167,12 @@ var _ = Describe("Repository controller", func() {
 				panic(err)
 			}
 		}()
-		waitShort()
+		wait()
 	})
 
 	AfterEach(func() {
 		cncl() // stop the mgr
-		waitShort()
+		wait()
 	})
 
 	It("should create CronJob and ConfigMap", func() {
@@ -305,7 +321,30 @@ var _ = Describe("Collection controller", func() {
 		Expect(err).NotTo(HaveOccurred())
 		err = k8sClient.DeleteAllOf(ctx, &corev1.ConfigMap{}, client.InNamespace(testNS))
 		Expect(err).NotTo(HaveOccurred())
-		waitShort()
+		Eventually(func() int {
+			var objs v1beta1.CollectionList
+			err = k8sClient.List(ctx, &objs, client.InNamespace(testNS))
+			Expect(err).NotTo(HaveOccurred())
+			return len(objs.Items)
+		}).Should(Equal(0))
+		Eventually(func() int {
+			var objs v1beta1.RepositoryList
+			err = k8sClient.List(ctx, &objs, client.InNamespace(testNS))
+			Expect(err).NotTo(HaveOccurred())
+			return len(objs.Items)
+		}).Should(Equal(0))
+		Eventually(func() int {
+			var objs batchv1.CronJobList
+			err = k8sClient.List(ctx, &objs, client.InNamespace(testNS))
+			Expect(err).NotTo(HaveOccurred())
+			return len(objs.Items)
+		}).Should(Equal(0))
+		Eventually(func() int {
+			var objs corev1.ConfigMapList
+			err = k8sClient.List(ctx, &objs, client.InNamespace(testNS))
+			Expect(err).NotTo(HaveOccurred())
+			return len(objs.Items)
+		}).Should(Equal(0))
 
 		mgr, err := ctrl.NewManager(cfg, ctrl.Options{
 			Scheme: scheme.Scheme,
@@ -325,12 +364,12 @@ var _ = Describe("Collection controller", func() {
 				panic(err)
 			}
 		}()
-		waitShort()
+		wait()
 	})
 
 	AfterEach(func() {
 		cncl() // stop the mgr
-		waitShort()
+		wait()
 	})
 
 	It("should create Repositories and a ConfigMap", func() {
