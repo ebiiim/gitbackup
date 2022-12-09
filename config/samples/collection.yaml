@@ -1,0 +1,24 @@
+apiVersion: gitbackup.ebiiim.com/v1beta1
+kind: Collection
+metadata:
+  name: collection-sample
+spec:
+  schedule: "0 6 * * *"
+  # (optional) specify a secret resource in the same namespace
+  gitCredentials:
+    name: gitcredentials-sample
+  # (optional) specify a secret resource in the same namespace
+  gitConfig:
+    name: gitconfig-sample
+  repos:
+    # schedule: "0 6 * * *"
+    - name: gitbackup
+      src: https://github.com/ebiiim/gitbackup
+      dst: https://gitlab.com/ebiiim/gitbackup
+    # schedule: "1 6 * * *"
+    - name: gitbackup2
+      src: https://github.com/ebiiim/gitbackup2
+      dst: https://gitlab.com/ebiiim/gitbackup2
+    # name: gitbackup3, schedule: "2 6 * * *"
+    - src: https://github.com/ebiiim/gitbackup3
+      dst: https://gitlab.com/ebiiim/gitbackup3_backup

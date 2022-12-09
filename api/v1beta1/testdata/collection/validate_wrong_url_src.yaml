@@ -1,0 +1,16 @@
+apiVersion: gitbackup.ebiiim.com/v1beta1
+kind: Collection
+metadata:
+  namespace: default
+  name: testcoll-x
+spec:
+  schedule: "0 6 * * *"
+  repos:
+    - name: foo
+      src: https://example.com/src/foo
+      dst: https://example.com/dst/foo
+    - name: bar
+      src: https://example.com/src/b rbarbar
+      dst: https://example.com/dst/barbarbar
+    - src: https://example.com/src/baz
+      dst: https://example.com/dst/bazbazbaz

@@ -1,6 +1,8 @@
 package v1beta1
 
 import (
+	"strings"
+
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -8,16 +10,16 @@ import (
 const (
 	OperatorName    = "gitbackup"
 	DefaultGitImage = "alpine/git:2.36.2"
-
-	defaultGitConfigPrefix = OperatorName + "-gitconfig-"
 )
 
+// GetOwnedConfigMapName returns "gitbackup-gitconfig-{r.Name}"
 func (r Repository) GetOwnedConfigMapName() string {
-	return defaultGitConfigPrefix + r.Name
+	return strings.Join([]string{OperatorName, "gitconfig", r.Name}, "-")
 }
 
+// GetOwnedCronJobName returns "gitbackup-{r.Name}"
 func (r Repository) GetOwnedCronJobName() string {
-	return OperatorName + "-" + r.Name
+	return strings.Join([]string{OperatorName, r.Name}, "-")
 }
 
 // RepositorySpec defines the desired state of Repository

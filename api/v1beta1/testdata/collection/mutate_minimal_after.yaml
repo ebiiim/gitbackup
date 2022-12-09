@@ -1,0 +1,10 @@
+apiVersion: gitbackup.ebiiim.com/v1beta1
+kind: Collection
+metadata:
+  namespace: default
+  name: testcoll-2
+spec:
+  schedule: "0 6 * * *"
+  gitConfig:
+    name: gitbackup-gitconfig-collection-testcoll-2
+  repos: []

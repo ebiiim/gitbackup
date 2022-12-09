@@ -1,0 +1,109 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.9.2
+  creationTimestamp: null
+  name: collections.gitbackup.ebiiim.com
+spec:
+  group: gitbackup.ebiiim.com
+  names:
+    kind: Collection
+    listKind: CollectionList
+    plural: collections
+    singular: collection
+  scope: Namespaced
+  versions:
+  - name: v1beta1
+    schema:
+      openAPIV3Schema:
+        description: Collection is the Schema for the collections API
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: CollectionSpec defines the desired state of Collection
+            properties:
+              gitConfig:
+                description: GitConfig specifies the name of the configmap resource
+                  in the same namespace used to mount .git-config Note that "[credential]\nhelper=store"
+                  is required to use GitCredentials.
+                properties:
+                  name:
+                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      TODO: Add other useful fields. apiVersion, kind, uid?'
+                    type: string
+                type: object
+                x-kubernetes-map-type: atomic
+              gitCredentials:
+                description: GitCredentials specifies the name of the Secret in the
+                  same namespace used to mount .git-credentials
+                properties:
+                  name:
+                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      TODO: Add other useful fields. apiVersion, kind, uid?'
+                    type: string
+                type: object
+                x-kubernetes-map-type: atomic
+              gitImage:
+                description: GitImage specifies the container image to run.
+                type: string
+              imagePullSecret:
+                description: ImagePullSecret specifies the name of the Secret in the
+                  same namespace used to pull the GitImage.
+                properties:
+                  name:
+                    description: 'Name of the referent. More info: https://kubernetes.io/docs/concepts/overview/working-with-objects/names/#names
+                      TODO: Add other useful fields. apiVersion, kind, uid?'
+                    type: string
+                type: object
+                x-kubernetes-map-type: atomic
+              repos:
+                description: Repos specifies repositories to backup.
+                items:
+                  properties:
+                    dst:
+                      description: Dst specifies the destination repository in URL
+                        format.
+                      type: string
+                    name:
+                      description: 'Name specifies the name for the repository. (default:
+                        the last element of `Src`)'
+                      type: string
+                    src:
+                      description: Src specifies the source repository in URL format.
+                      type: string
+                  required:
+                  - dst
+                  - src
+                  type: object
+                type: array
+              schedule:
+                description: Schedule in Cron format.
+                type: string
+              timeZone:
+                description: 'TimeZone in TZ database name. See also: https://kubernetes.io/docs/concepts/workloads/controllers/cron-jobs/#time-zones'
+                type: string
+            required:
+            - repos
+            - schedule
+            type: object
+          status:
+            description: CollectionStatus defines the observed state of Collection
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

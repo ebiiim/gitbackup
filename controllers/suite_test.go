@@ -72,8 +72,7 @@ var _ = AfterSuite(func() {
 })
 
 var (
-	waitShort = func() { time.Sleep(300 * time.Millisecond) }
-	waitLong  = func() { time.Sleep(2000 * time.Millisecond) }
+	wait      = func() { time.Sleep(100 * time.Millisecond) }
 	testNS    = "default"
 	testRepo1 = v1beta1.Repository{
 		ObjectMeta: metav1.ObjectMeta{
@@ -118,11 +117,9 @@ var (
 )
 
 var _ = Describe("Repository controller", func() {
-
 	var cncl context.CancelFunc
 
 	BeforeEach(func() {
-
 		ctx, cancel := context.WithCancel(context.Background())
 		cncl = cancel
 
@@ -133,7 +130,24 @@ var _ = Describe("Repository controller", func() {
 		Expect(err).NotTo(HaveOccurred())
 		err = k8sClient.DeleteAllOf(ctx, &corev1.ConfigMap{}, client.InNamespace(testNS))
 		Expect(err).NotTo(HaveOccurred())
-		waitShort()
+		Eventually(func() int {
+			var objs v1beta1.RepositoryList
+			err = k8sClient.List(ctx, &objs, client.InNamespace(testNS))
+			Expect(err).NotTo(HaveOccurred())
+			return len(objs.Items)
+		}).Should(Equal(0))
+		Eventually(func() int {
+			var objs batchv1.CronJobList
+			err = k8sClient.List(ctx, &objs, client.InNamespace(testNS))
+			Expect(err).NotTo(HaveOccurred())
+			return len(objs.Items)
+		}).Should(Equal(0))
+		Eventually(func() int {
+			var objs corev1.ConfigMapList
+			err = k8sClient.List(ctx, &objs, client.InNamespace(testNS))
+			Expect(err).NotTo(HaveOccurred())
+			return len(objs.Items)
+		}).Should(Equal(0))
 
 		mgr, err := ctrl.NewManager(cfg, ctrl.Options{
 			Scheme: scheme.Scheme,
@@ -153,18 +167,16 @@ var _ = Describe("Repository controller", func() {
 				panic(err)
 			}
 		}()
-		waitShort()
+		wait()
 	})
 
 	AfterEach(func() {
 		cncl() // stop the mgr
-		waitShort()
+		wait()
 	})
 
 	It("should create CronJob and ConfigMap", func() {
-
 		repo := testRepo1
-
 		ctx := context.Background()
 
 		err := k8sClient.Create(ctx, &repo)
@@ -184,9 +196,7 @@ var _ = Describe("Repository controller", func() {
 	})
 
 	It("should only create CronJob", func() {
-
 		repo := testRepo2
-
 		ctx := context.Background()
 
 		err := k8sClient.Create(ctx, &repo)
@@ -203,5 +213,226 @@ var _ = Describe("Repository controller", func() {
 		}).Should(Succeed())
 		Expect(cj.Spec.Schedule).Should(Equal(repo.Spec.Schedule))
 	})
+})
 
+var (
+	testColl1 = v1beta1.Collection{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-coll1",
+			Namespace: testNS,
+		},
+		Spec: v1beta1.CollectionSpec{
+			Schedule:        "0 6 * * *",
+			TimeZone:        nil,
+			GitImage:        pointer.String(v1beta1.DefaultGitImage),
+			ImagePullSecret: nil,
+			GitConfig: &corev1.LocalObjectReference{
+				Name: "gitbackup-gitconfig-collection-test-coll1",
+			},
+			GitCredentials: nil,
+			Repos: []v1beta1.CollectionRepoURL{
+				{
+					Name: pointer.String("foo"),
+					Src:  "http://example.com/src/foo",
+					Dst:  "http://example.com/dst/foo",
+				},
+				{
+					Name: pointer.String("bar"),
+					Src:  "http://example.com/src/barbarbar",
+					Dst:  "http://example.com/dst/barbarbar",
+				},
+				{
+					Name: nil,
+					Src:  "http://example.com/src/baz",
+					Dst:  "http://example.com/dst/bazbazbaz",
+				},
+			},
+		},
+	}
+	testColl2 = v1beta1.Collection{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-coll2",
+			Namespace: testNS,
+		},
+		Spec: v1beta1.CollectionSpec{
+			Schedule: "0 6 * * *",
+			TimeZone: pointer.String("Asia/Tokyo"),
+			GitImage: pointer.String(v1beta1.DefaultGitImage),
+			ImagePullSecret: &corev1.LocalObjectReference{
+				Name: "user-specified-image-pull-secret",
+			},
+			GitConfig: &corev1.LocalObjectReference{
+				Name: "user-created-cm",
+			},
+			GitCredentials: &corev1.LocalObjectReference{
+				Name: "user-specified-git-secret",
+			},
+			Repos: []v1beta1.CollectionRepoURL{
+				{
+					Name: pointer.String("foo"),
+					Src:  "http://example.com/src/foo",
+					Dst:  "http://example.com/dst/foo",
+				},
+				{
+					Name: pointer.String("bar"),
+					Src:  "http://example.com/src/barbarbar",
+					Dst:  "http://example.com/dst/barbarbar",
+				},
+				{
+					Name: nil,
+					Src:  "http://example.com/src/baz",
+					Dst:  "http://example.com/dst/bazbazbaz",
+				},
+			},
+		},
+	}
+	testColl3 = v1beta1.Collection{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      "test-coll3",
+			Namespace: testNS,
+		},
+		Spec: v1beta1.CollectionSpec{
+			Schedule:        "0 6 * * *",
+			TimeZone:        nil,
+			GitImage:        pointer.String(v1beta1.DefaultGitImage),
+			ImagePullSecret: nil,
+			GitConfig: &corev1.LocalObjectReference{
+				Name: "gitbackup-gitconfig-collection-test-coll3",
+			},
+			GitCredentials: nil,
+			Repos:          []v1beta1.CollectionRepoURL{},
+		},
+	}
+)
+
+var _ = Describe("Collection controller", func() {
+	var cncl context.CancelFunc
+
+	BeforeEach(func() {
+		ctx, cancel := context.WithCancel(context.Background())
+		cncl = cancel
+
+		var err error
+		err = k8sClient.DeleteAllOf(ctx, &v1beta1.Collection{}, client.InNamespace(testNS))
+		Expect(err).NotTo(HaveOccurred())
+		err = k8sClient.DeleteAllOf(ctx, &v1beta1.Repository{}, client.InNamespace(testNS))
+		Expect(err).NotTo(HaveOccurred())
+		err = k8sClient.DeleteAllOf(ctx, &batchv1.CronJob{}, client.InNamespace(testNS))
+		Expect(err).NotTo(HaveOccurred())
+		err = k8sClient.DeleteAllOf(ctx, &corev1.ConfigMap{}, client.InNamespace(testNS))
+		Expect(err).NotTo(HaveOccurred())
+		Eventually(func() int {
+			var objs v1beta1.CollectionList
+			err = k8sClient.List(ctx, &objs, client.InNamespace(testNS))
+			Expect(err).NotTo(HaveOccurred())
+			return len(objs.Items)
+		}).Should(Equal(0))
+		Eventually(func() int {
+			var objs v1beta1.RepositoryList
+			err = k8sClient.List(ctx, &objs, client.InNamespace(testNS))
+			Expect(err).NotTo(HaveOccurred())
+			return len(objs.Items)
+		}).Should(Equal(0))
+		Eventually(func() int {
+			var objs batchv1.CronJobList
+			err = k8sClient.List(ctx, &objs, client.InNamespace(testNS))
+			Expect(err).NotTo(HaveOccurred())
+			return len(objs.Items)
+		}).Should(Equal(0))
+		Eventually(func() int {
+			var objs corev1.ConfigMapList
+			err = k8sClient.List(ctx, &objs, client.InNamespace(testNS))
+			Expect(err).NotTo(HaveOccurred())
+			return len(objs.Items)
+		}).Should(Equal(0))
+
+		mgr, err := ctrl.NewManager(cfg, ctrl.Options{
+			Scheme: scheme.Scheme,
+		})
+		Expect(err).NotTo(HaveOccurred())
+
+		reconciler := controllers.CollectionReconciler{
+			Client: k8sClient,
+			Scheme: scheme.Scheme,
+		}
+		err = reconciler.SetupWithManager(mgr)
+		Expect(err).NotTo(HaveOccurred())
+
+		go func() {
+			err := mgr.Start(ctx)
+			if err != nil {
+				panic(err)
+			}
+		}()
+		wait()
+	})
+
+	AfterEach(func() {
+		cncl() // stop the mgr
+		wait()
+	})
+
+	It("should create Repositories and a ConfigMap", func() {
+		coll := testColl1
+		ctx := context.Background()
+
+		err := k8sClient.Create(ctx, &coll)
+		Expect(err).NotTo(HaveOccurred())
+
+		cm := corev1.ConfigMap{}
+		Eventually(func() error {
+			return k8sClient.Get(ctx, client.ObjectKey{Namespace: testNS, Name: coll.Spec.GitConfig.Name}, &cm)
+		}).Should(Succeed())
+		Expect(cm.Data).Should(HaveKey(".gitconfig"))
+
+		for _, cr := range coll.GetOwnedRepositoryNames() {
+			var repo v1beta1.Repository
+			Eventually(func() error {
+				return k8sClient.Get(ctx, client.ObjectKey{Namespace: testNS, Name: cr}, &repo)
+			}).Should(Succeed())
+			Expect(len(repo.OwnerReferences)).To(Equal(1))
+		}
+	})
+
+	It("should only create Repositories", func() {
+		coll := testColl2
+		ctx := context.Background()
+
+		err := k8sClient.Create(ctx, &coll)
+		Expect(err).NotTo(HaveOccurred())
+
+		cm := corev1.ConfigMap{}
+		Eventually(func() error {
+			return k8sClient.Get(ctx, client.ObjectKey{Namespace: testNS, Name: coll.Spec.GitConfig.Name}, &cm)
+		}).ShouldNot(Succeed())
+
+		for _, cr := range coll.GetOwnedRepositoryNames() {
+			var repo v1beta1.Repository
+			Eventually(func() error {
+				return k8sClient.Get(ctx, client.ObjectKey{Namespace: testNS, Name: cr}, &repo)
+			}).Should(Succeed())
+			Expect(len(repo.OwnerReferences)).To(Equal(1))
+		}
+	})
+
+	It("should only create a ConfigMap", func() {
+		coll := testColl3
+		ctx := context.Background()
+
+		err := k8sClient.Create(ctx, &coll)
+		Expect(err).NotTo(HaveOccurred())
+
+		cm := corev1.ConfigMap{}
+		Eventually(func() error {
+			return k8sClient.Get(ctx, client.ObjectKey{Namespace: testNS, Name: coll.Spec.GitConfig.Name}, &cm)
+		}).Should(Succeed())
+		Expect(cm.Data).Should(HaveKey(".gitconfig"))
+
+		for _, cr := range coll.GetOwnedRepositoryNames() {
+			var repo v1beta1.Repository
+			Eventually(func() error {
+				return k8sClient.Get(ctx, client.ObjectKey{Namespace: testNS, Name: cr}, &repo)
+			}).ShouldNot(Succeed())
+		}
+	})
 })

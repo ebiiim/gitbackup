@@ -1,0 +1,24 @@
+apiVersion: gitbackup.ebiiim.com/v1beta1
+kind: Collection
+metadata:
+  namespace: default
+  name: testcoll-3
+spec:
+  schedule: "0 6 * * *"
+  timeZone: Asia/Tokyo
+  gitImage: example.com/git:2.36.2
+  imagePullSecret:
+    name: hoge
+  gitCredentials:
+    name: fuga
+  gitConfig:
+    name: piyo
+  repos:
+    - name: foo
+      src: https://example.com/src/foo
+      dst: https://example.com/dst/foo
+    - name: bar
+      src: https://example.com/src/barbarbar
+      dst: https://example.com/dst/barbarbar
+    - src: https://example.com/src/baz
+      dst: https://example.com/dst/bazbazbaz
