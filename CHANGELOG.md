@@ -6,6 +6,10 @@
 
 - Collection CRD.
 
+### Changed
+
+- Repository default ConfigMap name `gitbackup-gitconfig-{repoName}` -> `gitbackup-repository-{repoName}-gitconfig`
+
 ## 0.1.1 - 2022-12-07
 
 ### Fixed

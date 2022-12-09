@@ -20,8 +20,8 @@ func TestRepository_GetOwnedConfigMapName(t *testing.T) {
 		fields fields
 		want   string
 	}{
-		{"a", fields{ObjectMeta: metav1.ObjectMeta{Name: "a"}}, "gitbackup-gitconfig-a"},
-		{"b-c", fields{ObjectMeta: metav1.ObjectMeta{Name: "b-c"}}, "gitbackup-gitconfig-b-c"},
+		{"a", fields{ObjectMeta: metav1.ObjectMeta{Name: "a"}}, "gitbackup-repository-a-gitconfig"},
+		{"b-c", fields{ObjectMeta: metav1.ObjectMeta{Name: "b-c"}}, "gitbackup-repository-b-c-gitconfig"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

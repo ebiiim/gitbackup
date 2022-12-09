@@ -87,7 +87,7 @@ var (
 			GitImage:        pointer.String(v1beta1.DefaultGitImage),
 			ImagePullSecret: nil,
 			GitConfig: &corev1.LocalObjectReference{
-				Name: "gitbackup-gitconfig-test-repo1",
+				Name: "gitbackup-repository-test-repo1-gitconfig",
 			},
 			GitCredentials: nil,
 		},
@@ -227,7 +227,7 @@ var (
 			GitImage:        pointer.String(v1beta1.DefaultGitImage),
 			ImagePullSecret: nil,
 			GitConfig: &corev1.LocalObjectReference{
-				Name: "gitbackup-gitconfig-collection-test-coll1",
+				Name: "gitbackup-collection-test-coll1-gitconfig",
 			},
 			GitCredentials: nil,
 			Repos: []v1beta1.CollectionRepoURL{
@@ -297,7 +297,7 @@ var (
 			GitImage:        pointer.String(v1beta1.DefaultGitImage),
 			ImagePullSecret: nil,
 			GitConfig: &corev1.LocalObjectReference{
-				Name: "gitbackup-gitconfig-collection-test-coll3",
+				Name: "gitbackup-collection-test-coll3-gitconfig",
 			},
 			GitCredentials: nil,
 			Repos:          []v1beta1.CollectionRepoURL{},

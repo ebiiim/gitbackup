@@ -26,9 +26,9 @@ func CycleCronByMinuteInSameHour(cronStr string) (string, error) {
 	return strings.Join(ss, " "), nil
 }
 
-// GetOwnedConfigMapName returns "gitbackup-gitconfig-collection-{r.Name}"
+// GetOwnedConfigMapName returns "gitbackup-collection-{r.Name}-gitconfig"
 func (r Collection) GetOwnedConfigMapName() string {
-	return strings.Join([]string{OperatorName, "gitconfig", "collection", r.Name}, "-")
+	return strings.Join([]string{OperatorName, "collection", r.Name, "gitconfig"}, "-")
 }
 
 // GetOwnedRepositoryNames returns ["{r.Name}-{r.Repos[i].Name}", ...]

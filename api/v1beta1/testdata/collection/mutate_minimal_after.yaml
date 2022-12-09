@@ -6,5 +6,5 @@ metadata:
 spec:
   schedule: "0 6 * * *"
   gitConfig:
-    name: gitbackup-gitconfig-collection-testcoll-2
+    name: gitbackup-collection-testcoll-2-gitconfig
   repos: []

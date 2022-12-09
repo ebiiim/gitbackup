@@ -12,9 +12,9 @@ const (
 	DefaultGitImage = "alpine/git:2.36.2"
 )
 
-// GetOwnedConfigMapName returns "gitbackup-gitconfig-{r.Name}"
+// GetOwnedConfigMapName returns "gitbackup-repository-{r.Name}-gitconfig"
 func (r Repository) GetOwnedConfigMapName() string {
-	return strings.Join([]string{OperatorName, "gitconfig", r.Name}, "-")
+	return strings.Join([]string{OperatorName, "repository", r.Name, "gitconfig"}, "-")
 }
 
 // GetOwnedCronJobName returns "gitbackup-{r.Name}"

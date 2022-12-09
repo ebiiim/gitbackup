@@ -56,8 +56,8 @@ func TestCollection_GetOwnedConfigMapName(t *testing.T) {
 		fields fields
 		want   string
 	}{
-		{"a", fields{ObjectMeta: metav1.ObjectMeta{Name: "a"}}, "gitbackup-gitconfig-collection-a"},
-		{"b-c", fields{ObjectMeta: metav1.ObjectMeta{Name: "b-c"}}, "gitbackup-gitconfig-collection-b-c"},
+		{"a", fields{ObjectMeta: metav1.ObjectMeta{Name: "a"}}, "gitbackup-collection-a-gitconfig"},
+		{"b-c", fields{ObjectMeta: metav1.ObjectMeta{Name: "b-c"}}, "gitbackup-collection-b-c-gitconfig"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
