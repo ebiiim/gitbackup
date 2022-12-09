@@ -15,7 +15,8 @@ A [Kubernetes Operator](https://kubernetes.io/docs/concepts/extend-kubernetes/op
 - [Overview](#overview)
 - [Getting Started](#getting-started)
   - [Installation](#installation)
-  - [Deploy a `Repository` resource](#deploy-a-repository-resource)
+  - [Backup a Git repository with a `Repository` resource](#backup-a-git-repository-with-a-repository-resource)
+  - [Backup many Git repositories with a `Collection` resource](#backup-many-git-repositories-with-a-collection-resource)
   - [Uninstallation](#uninstallation)
 - [Developing](#developing)
   - [Prerequisites](#prerequisites)
@@ -59,10 +60,10 @@ kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/
 Deploy the Operator with the following command. It creates `gitbackup-system` namespace and deploys CRDs, controllers and other resources.
 
 ```sh
-kubectl apply -f https://github.com/ebiiim/gitbackup/releases/download/v0.1.0/gitbackup.yaml
+kubectl apply -f https://github.com/ebiiim/gitbackup/releases/download/v0.2.0/gitbackup.yaml
 ```
 
-### Deploy a `Repository` resource
+### Backup a Git repository with a `Repository` resource
 
 First, create a `Secret` resource that contains `.git-credentials`.
 	
@@ -103,12 +104,65 @@ NOTE: You can test the `CronJob` by manually triggering it.
 kubectl create job --from=cronjob/<name> <job-name>
 ```
 
+### Backup many Git repositories with a `Collection` resource
+
+First, create a `Secret` resource that contains `.git-credentials`.
+	
+```sh
+kubectl create secret generic repo1-secret --from-file=$HOME/.git-credentials
+```
+
+Next, create a `Collection` resource.
+
+```yaml
+apiVersion: gitbackup.ebiiim.com/v1beta1
+kind: Collection
+metadata:
+  name: coll1
+spec:
+  schedule: "0 6 * * *"
+  gitCredentials:
+    name: coll1-secret
+  repos:
+    - name: gitbackup
+      src: https://github.com/ebiiim/gitbackup
+      dst: https://gitlab.com/ebiiim/gitbackup
+    - name: foo
+      src: https://example.com/src/foo
+      dst: https://example.com/dst/foo
+    - name: bar
+      src: https://example.com/src/bar
+      dst: https://example.com/dst/bar
+```
+
+Finally, confirm that resources has been created.
+
+```
+$ kubectl get colls
+NAME    AGE
+coll1   5s
+
+$ kubectl get repos
+NAME                AGE
+coll1-bar           5s
+coll1-foo           5s
+coll1-gitbackup     5s
+
+$ kubectl get cronjobs
+NAME                        SCHEDULE    SUSPEND   ACTIVE   LAST SCHEDULE   AGE
+gitbackup-coll1-bar         2 6 * * *   False     0        <none>          5s
+gitbackup-coll1-foo         1 6 * * *   False     0        <none>          5s
+gitbackup-coll1-gitbackup   0 6 * * *   False     0        <none>          5s
+```
+
+> 💡 NOTE: Each job runs one minute apart.
+
 ### Uninstallation
 
 Delete the Operator and resources with the following command.
 
 ```sh
-kubectl delete -f https://github.com/ebiiim/gitbackup/releases/download/v0.1.0/gitbackup.yaml
+kubectl delete -f https://github.com/ebiiim/gitbackup/releases/download/v0.2.0/gitbackup.yaml
 ```
 
 ## Developing

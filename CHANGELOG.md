@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.0 - 2022-12-10
+
+### Added
+
+- Collection CRD.
+
 ## 0.1.1 - 2022-12-07
 
 ### Fixed
@@ -10,4 +16,4 @@
 
 ### Added
 
-- RepositoryController with CronJob creating capabilities.
+- Repository CRD.
