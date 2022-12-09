@@ -217,6 +217,7 @@ var _ = Describe("Collection webhook", func() {
 			testValidateCollection(mustOpen(dir, "validate_wrong_url_src.yaml"), want)
 			testValidateCollection(mustOpen(dir, "validate_wrong_url_dst.yaml"), want)
 			testValidateCollection(mustOpen(dir, "validate_wrong_url_eq.yaml"), want)
+			testValidateCollection(mustOpen(dir, "validate_wrong_reponame.yaml"), want)
 			_ = want
 		})
 	})

@@ -31,6 +31,44 @@ func (r Collection) GetOwnedConfigMapName() string {
 	return strings.Join([]string{OperatorName, "collection", r.Name, "gitconfig"}, "-")
 }
 
+func ToRFC1123(s string, def string) string {
+	s = strings.ToLower(s)
+	s = strings.ReplaceAll(s, "_", "-")
+	var sb strings.Builder
+	for _, c := range s {
+		if c == '.' || c == '-' || (c >= 'a' && c <= 'z') || (c >= '0' && c <= '9') {
+			sb.WriteByte(byte(c))
+		}
+	}
+	s = sb.String()
+	a := 0
+	b := len(s)
+	for i, c := range s {
+		if c != '.' && c != '-' {
+			a = i
+			break
+		}
+		// only '.' or '-'
+		if i == len(s)-1 {
+			return def
+		}
+	}
+	for i := len(s) - 1; i >= 0; i-- {
+		if s[i] != '.' && s[i] != '-' {
+			b = i + 1
+			break
+		}
+	}
+	s = s[a:b]
+	if len(s) == 0 {
+		return def
+	}
+	if len(s) > 253 {
+		return s[0:253]
+	}
+	return s
+}
+
 // GetOwnedRepositoryNames returns ["{r.Name}-{r.Repos[i].Name}", ...]
 func (r Collection) GetOwnedRepositoryNames() []string {
 	prefix := strings.Join([]string{r.Name, ""}, "-")
@@ -43,9 +81,9 @@ func (r Collection) GetOwnedRepositoryNames() []string {
 		} else {
 			// use the last element of cr.Src as name
 			crSrc := strings.Split(cr.Src, "/")
-			name = crSrc[len(crSrc)-1]
+			// convert repo name to RFC1123 DNS Subdomain Names
+			name = ToRFC1123(crSrc[len(crSrc)-1], "invalid-name")
 		}
-
 		names[i] = prefix + name
 	}
 	return names

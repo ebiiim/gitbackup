@@ -6,6 +6,7 @@ import (
 
 	v1beta1 "github.com/ebiiim/gitbackup/api/v1beta1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/util/validation"
 	"k8s.io/utils/pointer"
 )
 
@@ -93,6 +94,13 @@ func TestCollection_GetOwnedRepositoryNames(t *testing.T) {
 		}}, []string{
 			"a-foo",
 		}},
+		{"a/FOO_2022", fields{ObjectMeta: metav1.ObjectMeta{Name: "a"}, Spec: v1beta1.CollectionSpec{
+			Repos: []v1beta1.CollectionRepoURL{
+				{Name: nil, Src: "http://example.com/hoge/FOO_2022", Dst: "http://example.com/fuga/FOO_2022"},
+			},
+		}}, []string{
+			"a-foo-2022",
+		}},
 		{"b-c/foo,bar,baz", fields{ObjectMeta: metav1.ObjectMeta{Name: "b-c"}, Spec: v1beta1.CollectionSpec{
 			Repos: []v1beta1.CollectionRepoURL{
 				{Name: pointer.String("foo"), Src: "http://example.com/hoge/foo", Dst: "http://example.com/fuga/foo"},
@@ -115,6 +123,37 @@ func TestCollection_GetOwnedRepositoryNames(t *testing.T) {
 			}
 			if got := c.GetOwnedRepositoryNames(); !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("Collection.GetOwnedRepositoryNames() = %v, want %v", got, tt.want)
+			}
+		})
+	}
+}
+
+func Test_ToRFC1123(t *testing.T) {
+	type args struct {
+		s   string
+		def string
+	}
+	tests := []struct {
+		args args
+		want string
+	}{
+		{args{"", "invalid-name"}, "invalid-name"},
+		{args{".-", "invalid-name"}, "invalid-name"},
+		{args{"-.", "invalid-name"}, "invalid-name"},
+		{args{"a", "invalid-name"}, "a"},
+		{args{"ABC_123", "invalid-name"}, "abc-123"},
+		{args{"_._.a_a._._", "invalid-name"}, "a-a"},
+		{args{"🤤?a?", "invalid-name"}, "a"},
+		{args{"a.b.c-d", "invalid-name"}, "a.b.c-d"},
+	}
+	for _, tt := range tests {
+		t.Run(tt.args.s, func(t *testing.T) {
+			got := v1beta1.ToRFC1123(tt.args.s, tt.args.def)
+			if got != tt.want {
+				t.Errorf("toRFC1123() = %v, want %v", got, tt.want)
+			}
+			if len(validation.IsDNS1123Subdomain(got)) != 0 {
+				t.Errorf("validation.IsDNS1123Subdomain() = %v", validation.IsDNS1123Subdomain(got))
 			}
 		})
 	}

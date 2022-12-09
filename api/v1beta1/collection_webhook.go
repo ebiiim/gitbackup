@@ -5,6 +5,7 @@ import (
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/apimachinery/pkg/util/validation"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
@@ -77,6 +78,9 @@ func (r *Collection) validateCron() error {
 
 func (r *Collection) validateRepos() error {
 	for i, cr := range r.Spec.Repos {
+		if cr.Name != nil && len(validation.IsDNS1123Subdomain(*cr.Name)) != 0 {
+			return fmt.Errorf("name must be RFC1123 DNS Subdomain string on spec.repos[%d]", i)
+		}
 		if !isValidURLSet(cr.Src, cr.Dst) {
 			return fmt.Errorf("invalid src or dst URL on spec.repos[%d]", i)
 		}
