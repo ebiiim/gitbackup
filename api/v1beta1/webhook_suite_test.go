@@ -124,30 +124,33 @@ var _ = AfterSuite(func() {
 })
 
 var _ = Describe("Repository webhook", func() {
+	dir := "testdata/repository"
 	Context("mutating", func() {
 		It("should mutate repositories", func() {
-			testMutate(mustOpen("testdata", "mutate_minimal_before.yaml"), mustOpen("testdata", "mutate_minimal_after.yaml"))
-			testMutate(mustOpen("testdata", "mutate_all_before.yaml"), mustOpen("testdata", "mutate_all_after.yaml"))
+			testMutateRepository(mustOpen(dir, "mutate_minimal_before.yaml"), mustOpen(dir, "mutate_minimal_after.yaml"))
+			testMutateRepository(mustOpen(dir, "mutate_all_before.yaml"), mustOpen(dir, "mutate_all_after.yaml"))
 		})
 	})
 	Context("validating", func() {
 		It("should create valid repositories", func() {
 			want := true
-			testValidate(mustOpen("testdata", "validate_all.yaml"), want)
-			testValidate(mustOpen("testdata", "validate_minimal.yaml"), want)
+			testValidateRepository(mustOpen(dir, "validate_all.yaml"), want)
+			testValidateRepository(mustOpen(dir, "validate_minimal.yaml"), want)
+			testValidateRepository(mustOpen(dir, "validate_cron_weekly.yaml"), want)
+			testValidateRepository(mustOpen(dir, "validate_cron_sun.yaml"), want)
 			_ = want
 		})
 		It("should not create invalid repositories", func() {
 			want := false
-			testValidate(mustOpen("testdata", "validate_wrong_cron.yaml"), want)
-			testValidate(mustOpen("testdata", "validate_wrong_url.yaml"), want)
-			testValidate(mustOpen("testdata", "validate_wrong_url2.yaml"), want)
+			testValidateRepository(mustOpen(dir, "validate_wrong_cron.yaml"), want)
+			testValidateRepository(mustOpen(dir, "validate_wrong_url_src.yaml"), want)
+			testValidateRepository(mustOpen(dir, "validate_wrong_url_dst.yaml"), want)
 			_ = want
 		})
 	})
 })
 
-func testMutate(rIn, rWant io.Reader) {
+func testMutateRepository(rIn, rWant io.Reader) {
 	ctx2 := context.Background()
 
 	var in, got, want v1beta1.Repository
@@ -169,10 +172,80 @@ func testMutate(rIn, rWant io.Reader) {
 	Expect(err).NotTo(HaveOccurred())
 }
 
-func testValidate(rIn io.Reader, shouldBeValid bool) {
+func testValidateRepository(rIn io.Reader, shouldBeValid bool) {
 	ctx2 := context.Background()
 
 	var in v1beta1.Repository
+
+	err := yaml.NewYAMLOrJSONDecoder(rIn, 32).Decode(&in)
+	Expect(err).NotTo(HaveOccurred())
+
+	err = k8sClient.Create(ctx2, &in)
+	if shouldBeValid {
+		Expect(err).NotTo(HaveOccurred(), "Data: %+v", &in)
+	} else {
+		Expect(err).To(HaveOccurred(), "Data: %#v", &in)
+	}
+
+	if shouldBeValid {
+		err = k8sClient.Delete(ctx2, &in)
+		Expect(err).NotTo(HaveOccurred())
+	}
+}
+
+var _ = Describe("Collection webhook", func() {
+	dir := "testdata/collection"
+	Context("mutating", func() {
+		It("should mutate collections", func() {
+			testMutateCollection(mustOpen(dir, "mutate_minimal_before.yaml"), mustOpen(dir, "mutate_minimal_after.yaml"))
+			testMutateCollection(mustOpen(dir, "mutate_all_before.yaml"), mustOpen(dir, "mutate_all_after.yaml"))
+		})
+	})
+	Context("validating", func() {
+		It("should create valid collections", func() {
+			want := true
+			testValidateCollection(mustOpen(dir, "validate_all.yaml"), want)
+			testValidateCollection(mustOpen(dir, "validate_minimal.yaml"), want)
+			testValidateCollection(mustOpen(dir, "validate_cron_sun.yaml"), want)
+			_ = want
+		})
+		It("should not create invalid collections", func() {
+			want := false
+			testValidateCollection(mustOpen(dir, "validate_wrong_cron.yaml"), want)
+			testValidateCollection(mustOpen(dir, "validate_wrong_cron_weekly.yaml"), want)
+			testValidateCollection(mustOpen(dir, "validate_wrong_url_src.yaml"), want)
+			testValidateCollection(mustOpen(dir, "validate_wrong_url_dst.yaml"), want)
+			_ = want
+		})
+	})
+})
+
+func testMutateCollection(rIn, rWant io.Reader) {
+	ctx2 := context.Background()
+
+	var in, got, want v1beta1.Collection
+
+	err := yaml.NewYAMLOrJSONDecoder(rIn, 32).Decode(&in)
+	Expect(err).NotTo(HaveOccurred())
+
+	err = yaml.NewYAMLOrJSONDecoder(rWant, 32).Decode(&want)
+	Expect(err).NotTo(HaveOccurred())
+
+	err = k8sClient.Create(ctx2, &in)
+	Expect(err).NotTo(HaveOccurred())
+	err = k8sClient.Get(ctx2, client.ObjectKeyFromObject(&in), &got)
+	Expect(err).NotTo(HaveOccurred())
+
+	Expect(got.Spec).Should(Equal(want.Spec))
+
+	err = k8sClient.Delete(ctx2, &got)
+	Expect(err).NotTo(HaveOccurred())
+}
+
+func testValidateCollection(rIn io.Reader, shouldBeValid bool) {
+	ctx2 := context.Background()
+
+	var in v1beta1.Collection
 
 	err := yaml.NewYAMLOrJSONDecoder(rIn, 32).Decode(&in)
 	Expect(err).NotTo(HaveOccurred())

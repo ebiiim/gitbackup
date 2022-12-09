@@ -1,22 +1,41 @@
 package v1beta1
 
 import (
+	"fmt"
+	"strconv"
 	"strings"
 
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-// GetOwnedConfigMapName returns "gitbackup-gitconfig-collection-{c.Name}"
-func (c Collection) GetOwnedConfigMapName() string {
-	return strings.Join([]string{OperatorName, "gitconfig", "collection", c.Name}, "-")
+// CycleCronByMinuteInSameHour cycles cron minute.
+// Assumes cronStr is "1 2 3 4 5" format.
+// "30 6 * * *" -> "31 6 * * *" -> ... "59 6 * * *" -> "0 6 * * *" -> "1 6 * * *" -> ...
+func CycleCronByMinuteInSameHour(cronStr string) (string, error) {
+	ss := strings.Split(cronStr, " ")
+	if len(ss) != 5 {
+		return "", fmt.Errorf("cronStr must be \"1 2 3 4 5\" format but got %s", cronStr)
+	}
+	minute, err := strconv.Atoi(ss[0])
+	if err != nil || minute < 0 || minute >= 60 {
+		return "", fmt.Errorf("cronStr has invalid minute field cronStr=%s minute=%d err=%v", cronStr, minute, err)
+	}
+	minute = (minute + 1) % 60
+	ss[0] = strconv.Itoa(minute)
+	return strings.Join(ss, " "), nil
 }
 
-// GetOwnedRepositoryNames returns ["gitbackup-{c.Name}-{c.Repos[i].Name}", ...]
-func (c Collection) GetOwnedRepositoryNames() []string {
-	prefix := strings.Join([]string{OperatorName, c.Name, ""}, "-")
-	names := make([]string, len(c.Spec.Repos))
-	for i, cr := range c.Spec.Repos {
+// GetOwnedConfigMapName returns "gitbackup-gitconfig-collection-{r.Name}"
+func (r Collection) GetOwnedConfigMapName() string {
+	return strings.Join([]string{OperatorName, "gitconfig", "collection", r.Name}, "-")
+}
+
+// GetOwnedRepositoryNames returns ["gitbackup-{r.Name}-{r.Repos[i].Name}", ...]
+func (r Collection) GetOwnedRepositoryNames() []string {
+	prefix := strings.Join([]string{OperatorName, r.Name, ""}, "-")
+	names := make([]string, len(r.Spec.Repos))
+	for i, cr := range r.Spec.Repos {
 		var name string
 
 		if cr.Name != nil {

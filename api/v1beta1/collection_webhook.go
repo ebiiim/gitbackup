@@ -1,6 +1,9 @@
 package v1beta1
 
 import (
+	"fmt"
+
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
@@ -16,8 +19,6 @@ func (r *Collection) SetupWebhookWithManager(mgr ctrl.Manager) error {
 		Complete()
 }
 
-// TODO(user): EDIT THIS FILE!  THIS IS SCAFFOLDING FOR YOU TO OWN!
-
 //+kubebuilder:webhook:path=/mutate-gitbackup-ebiiim-com-v1beta1-collection,mutating=true,failurePolicy=fail,sideEffects=None,groups=gitbackup.ebiiim.com,resources=collections,verbs=create;update,versions=v1beta1,name=mcollection.kb.io,admissionReviewVersions=v1
 
 var _ webhook.Defaulter = &Collection{}
@@ -26,10 +27,13 @@ var _ webhook.Defaulter = &Collection{}
 func (r *Collection) Default() {
 	collectionlog.Info("default", "name", r.Name)
 
-	// TODO(user): fill in your defaulting logic.
+	if r.Spec.GitConfig == nil {
+		r.Spec.GitConfig = &corev1.LocalObjectReference{Name: r.GetOwnedConfigMapName()}
+	}
+
 }
 
-// TODO(user): change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
+// NOTE: change verbs to "verbs=create;update;delete" if you want to enable deletion validation.
 //+kubebuilder:webhook:path=/validate-gitbackup-ebiiim-com-v1beta1-collection,mutating=false,failurePolicy=fail,sideEffects=None,groups=gitbackup.ebiiim.com,resources=collections,verbs=create;update,versions=v1beta1,name=vcollection.kb.io,admissionReviewVersions=v1
 
 var _ webhook.Validator = &Collection{}
@@ -38,7 +42,13 @@ var _ webhook.Validator = &Collection{}
 func (r *Collection) ValidateCreate() error {
 	collectionlog.Info("validate create", "name", r.Name)
 
-	// TODO(user): fill in your validation logic upon object creation.
+	if err := r.validateCron(); err != nil {
+		return err
+	}
+	if err := r.validateRepos(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
@@ -46,14 +56,30 @@ func (r *Collection) ValidateCreate() error {
 func (r *Collection) ValidateUpdate(old runtime.Object) error {
 	collectionlog.Info("validate update", "name", r.Name)
 
-	// TODO(user): fill in your validation logic upon object update.
+	if err := r.validateCron(); err != nil {
+		return err
+	}
+	if err := r.validateRepos(); err != nil {
+		return err
+	}
+
 	return nil
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *Collection) ValidateDelete() error {
-	collectionlog.Info("validate delete", "name", r.Name)
+// NOTE: nothing to validate upon object deletion.
+func (r *Collection) ValidateDelete() error { return nil }
 
-	// TODO(user): fill in your validation logic upon object deletion.
+func (r *Collection) validateCron() error {
+	_, err := CycleCronByMinuteInSameHour(r.Spec.Schedule)
+	return err
+}
+
+func (r *Collection) validateRepos() error {
+	for i, cr := range r.Spec.Repos {
+		if !isValidURLs(cr.Src, cr.Dst) {
+			return fmt.Errorf("invalid src or dst URL on spec.repos[%d]", i)
+		}
+	}
 	return nil
 }

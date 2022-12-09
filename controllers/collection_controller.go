@@ -2,9 +2,6 @@ package controllers
 
 import (
 	"context"
-	"fmt"
-	"strconv"
-	"strings"
 
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/api/errors"
@@ -172,29 +169,12 @@ func (r *CollectionReconciler) reconcileRepos(ctx context.Context, col v1beta1.C
 			lg.Error(err, "unable to create or update Repository", "name", desiredRepoNames[i])
 		}
 		// the cron expression is validated by Validating Webhook so no need to handle errors here
-		sched, _ = cycleCronByMinuteInSameHour(sched)
+		sched, _ = v1beta1.CycleCronByMinuteInSameHour(sched)
 
 		lg.Info("Repository reconciled", "name", desiredRepoNames[i], "op", op)
 	}
 
 	return nil
-}
-
-// cycleCronByMinuteInSameHour cycles cron minute.
-// Assumes cronStr is "1 2 3 4 5" format.
-// "30 6 * * *" -> "31 6 * * *" -> ... "59 6 * * *" -> "0 6 * * *" -> "1 6 * * *" -> ...
-func cycleCronByMinuteInSameHour(cronStr string) (string, error) {
-	ss := strings.Split(cronStr, " ")
-	if len(ss) != 5 {
-		return "", fmt.Errorf("cronStr must be \"1 2 3 4 5\" format but got %s", cronStr)
-	}
-	minute, err := strconv.Atoi(ss[0])
-	if err != nil || minute < 0 || minute >= 60 {
-		return "", fmt.Errorf("cronStr has invalid minute field cronStr=%s minute=%d err=%v", cronStr, minute, err)
-	}
-	minute = (minute + 1) % 60
-	ss[0] = strconv.Itoa(minute)
-	return strings.Join(ss, " "), nil
 }
 
 // SetupWithManager sets up the controller with the Manager.

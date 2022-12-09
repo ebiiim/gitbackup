@@ -7,6 +7,7 @@ import (
 	cron "github.com/robfig/cron/v3"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/apimachinery/pkg/runtime"
+	"k8s.io/utils/pointer"
 	ctrl "sigs.k8s.io/controller-runtime"
 	logf "sigs.k8s.io/controller-runtime/pkg/log"
 	"sigs.k8s.io/controller-runtime/pkg/webhook"
@@ -30,8 +31,7 @@ func (r *Repository) Default() {
 	repositorylog.Info("default", "name", r.Name)
 
 	if r.Spec.GitImage == nil {
-		s := DefaultGitImage
-		r.Spec.GitImage = &s
+		r.Spec.GitImage = pointer.String(DefaultGitImage)
 	}
 	if r.Spec.GitConfig == nil {
 		r.Spec.GitConfig = &corev1.LocalObjectReference{Name: r.GetOwnedConfigMapName()}
@@ -72,12 +72,8 @@ func (r *Repository) ValidateUpdate(old runtime.Object) error {
 }
 
 // ValidateDelete implements webhook.Validator so a webhook will be registered for the type
-func (r *Repository) ValidateDelete() error {
-	repositorylog.Info("validate delete", "name", r.Name)
-
-	// NOTE: nothing to validate upon object deletion.
-	return nil
-}
+// NOTE: nothing to validate upon object deletion.
+func (r *Repository) ValidateDelete() error { return nil }
 
 func (r *Repository) validateCron() error {
 	_, err := cron.ParseStandard(r.Spec.Schedule)
@@ -85,11 +81,17 @@ func (r *Repository) validateCron() error {
 }
 
 func (r *Repository) validateURL() error {
-	test := func(s string) bool {
-		return !strings.Contains(s, " ")
-	}
-	if !test(r.Spec.Src) || !test(r.Spec.Dst) {
+	if !isValidURLs(r.Spec.Src, r.Spec.Dst) {
 		return errors.New("invalid src or dst URL")
 	}
 	return nil
+}
+
+func isValidURLs(s ...string) bool {
+	for _, ss := range s {
+		if strings.Contains(ss, " ") {
+			return false
+		}
+	}
+	return true
 }

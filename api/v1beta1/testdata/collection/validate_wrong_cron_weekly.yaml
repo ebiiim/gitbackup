@@ -1,0 +1,8 @@
+apiVersion: gitbackup.ebiiim.com/v1beta1
+kind: Collection
+metadata:
+  namespace: default
+  name: testcoll-x
+spec:
+  schedule: "@weekly"
+  repos: []
