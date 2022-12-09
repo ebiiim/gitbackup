@@ -12,6 +12,9 @@ spec:
     kind: Collection
     listKind: CollectionList
     plural: collections
+    shortNames:
+    - coll
+    - colls
     singular: collection
   scope: Namespaced
   versions:

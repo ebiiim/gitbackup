@@ -98,6 +98,7 @@ type CollectionStatus struct {
 
 //+kubebuilder:object:root=true
 //+kubebuilder:subresource:status
+//+kubebuilder:resource:shortName=coll;colls
 
 // Collection is the Schema for the collections API
 type Collection struct {
