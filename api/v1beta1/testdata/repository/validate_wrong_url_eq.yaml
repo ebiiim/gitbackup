@@ -5,5 +5,5 @@ metadata:
   name: testrepo-x
 spec:
   src: https://example.com/src
-  dst: https://examp e.com/dst
+  dst: https://example.com/src
   schedule: "0 6 * * *"

@@ -81,14 +81,22 @@ func (r *Repository) validateCron() error {
 }
 
 func (r *Repository) validateURL() error {
-	if !isValidURLs(r.Spec.Src, r.Spec.Dst) {
+	if !isValidURLSet(r.Spec.Src, r.Spec.Dst) {
 		return errors.New("invalid src or dst URL")
 	}
 	return nil
 }
 
-func isValidURLs(s ...string) bool {
+// isValidURLSet tests if URLs are unique and valid.
+func isValidURLSet(s ...string) bool {
+	m := make(map[string]struct{}, len(s))
 	for _, ss := range s {
+		_, ok := m[ss]
+		if !ok {
+			m[ss] = struct{}{}
+		} else {
+			return false
+		}
 		if strings.Contains(ss, " ") {
 			return false
 		}

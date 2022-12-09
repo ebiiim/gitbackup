@@ -77,7 +77,7 @@ func (r *Collection) validateCron() error {
 
 func (r *Collection) validateRepos() error {
 	for i, cr := range r.Spec.Repos {
-		if !isValidURLs(cr.Src, cr.Dst) {
+		if !isValidURLSet(cr.Src, cr.Dst) {
 			return fmt.Errorf("invalid src or dst URL on spec.repos[%d]", i)
 		}
 	}

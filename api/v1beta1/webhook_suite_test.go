@@ -145,6 +145,7 @@ var _ = Describe("Repository webhook", func() {
 			testValidateRepository(mustOpen(dir, "validate_wrong_cron.yaml"), want)
 			testValidateRepository(mustOpen(dir, "validate_wrong_url_src.yaml"), want)
 			testValidateRepository(mustOpen(dir, "validate_wrong_url_dst.yaml"), want)
+			testValidateRepository(mustOpen(dir, "validate_wrong_url_eq.yaml"), want)
 			_ = want
 		})
 	})
@@ -215,6 +216,7 @@ var _ = Describe("Collection webhook", func() {
 			testValidateCollection(mustOpen(dir, "validate_wrong_cron_weekly.yaml"), want)
 			testValidateCollection(mustOpen(dir, "validate_wrong_url_src.yaml"), want)
 			testValidateCollection(mustOpen(dir, "validate_wrong_url_dst.yaml"), want)
+			testValidateCollection(mustOpen(dir, "validate_wrong_url_eq.yaml"), want)
 			_ = want
 		})
 	})

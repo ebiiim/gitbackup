@@ -11,6 +11,6 @@ spec:
       dst: https://example.com/dst/foo
     - name: bar
       src: https://example.com/src/barbarbar
-      dst: https://example.com/dst/b rbarbar
+      dst: https://example.com/src/barbarbar
     - src: https://example.com/src/baz
       dst: https://example.com/dst/bazbazbaz
