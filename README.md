@@ -109,7 +109,7 @@ kubectl create job --from=cronjob/<name> <job-name>
 First, create a `Secret` resource that contains `.git-credentials`.
 	
 ```sh
-kubectl create secret generic repo1-secret --from-file=$HOME/.git-credentials
+kubectl create secret generic coll1-secret --from-file=$HOME/.git-credentials
 ```
 
 Next, create a `Collection` resource.
