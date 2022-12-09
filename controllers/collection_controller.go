@@ -30,8 +30,8 @@ func (r *CollectionReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 	lg := log.FromContext(ctx)
 	lg.Info("Reconcile")
 
-	var col v1beta1.Collection
-	err := r.Get(ctx, req.NamespacedName, &col)
+	var coll v1beta1.Collection
+	err := r.Get(ctx, req.NamespacedName, &coll)
 	if errors.IsNotFound(err) {
 		lg.Info("Collection is already deleted")
 		return ctrl.Result{}, nil
@@ -40,31 +40,31 @@ func (r *CollectionReconciler) Reconcile(ctx context.Context, req ctrl.Request) 
 		lg.Error(err, "unable to get Collection")
 		return ctrl.Result{}, err
 	}
-	if !col.DeletionTimestamp.IsZero() {
+	if !coll.DeletionTimestamp.IsZero() {
 		lg.Info("Collection is being deleted")
 		return ctrl.Result{}, nil
 	}
 
-	if err := r.reconcileGitConfig(ctx, col); err != nil {
+	if err := r.reconcileGitConfig(ctx, coll); err != nil {
 		return ctrl.Result{}, err
 	}
-	if err := r.reconcileGitCredentials(ctx, col); err != nil {
+	if err := r.reconcileGitCredentials(ctx, coll); err != nil {
 		return ctrl.Result{}, err
 	}
-	if err := r.reconcileRepos(ctx, col); err != nil {
+	if err := r.reconcileRepos(ctx, coll); err != nil {
 		return ctrl.Result{}, err
 	}
 
 	return ctrl.Result{}, nil
 }
 
-func (r *CollectionReconciler) reconcileGitConfig(ctx context.Context, col v1beta1.Collection) error {
+func (r *CollectionReconciler) reconcileGitConfig(ctx context.Context, coll v1beta1.Collection) error {
 	lg := log.FromContext(ctx)
 	lg.Info("reconcileGitConfig")
 
-	cmName := col.GetOwnedConfigMapName()
+	cmName := coll.GetOwnedConfigMapName()
 
-	if col.Spec.GitConfig.Name != cmName {
+	if coll.Spec.GitConfig.Name != cmName {
 		lg.Info("GitConfig specified")
 		return nil
 	}
@@ -72,14 +72,14 @@ func (r *CollectionReconciler) reconcileGitConfig(ctx context.Context, col v1bet
 	lg.Info("ensure default GitConfig cm created")
 
 	cm := &corev1.ConfigMap{}
-	cm.SetNamespace(col.Namespace)
+	cm.SetNamespace(coll.Namespace)
 	cm.SetName(cmName)
 
 	op, err := ctrl.CreateOrUpdate(ctx, r.Client, cm, func() error {
 		cm.Data = map[string]string{
 			".gitconfig": "[credential]\n\thelper = store",
 		}
-		return ctrl.SetControllerReference(&col, cm, r.Scheme)
+		return ctrl.SetControllerReference(&coll, cm, r.Scheme)
 	})
 
 	if err != nil {
@@ -92,11 +92,11 @@ func (r *CollectionReconciler) reconcileGitConfig(ctx context.Context, col v1bet
 	return nil
 }
 
-func (r *CollectionReconciler) reconcileGitCredentials(ctx context.Context, col v1beta1.Collection) error {
+func (r *CollectionReconciler) reconcileGitCredentials(ctx context.Context, coll v1beta1.Collection) error {
 	lg := log.FromContext(ctx)
 	lg.Info("reconcileGitCredentials")
 
-	if col.Spec.GitCredentials != nil {
+	if coll.Spec.GitCredentials != nil {
 		lg.Info("GitCredentials specified")
 		return nil
 	}
@@ -114,11 +114,11 @@ func sameOwner(a, b metav1.OwnerReference) bool {
 	return (aa.Group == bb.Group) && (a.Kind == b.Kind) && (a.Name == b.Name)
 }
 
-func (r *CollectionReconciler) reconcileRepos(ctx context.Context, col v1beta1.Collection) error {
+func (r *CollectionReconciler) reconcileRepos(ctx context.Context, coll v1beta1.Collection) error {
 	lg := log.FromContext(ctx)
 	lg.Info("reconcileRepos")
 
-	desiredRepoNames := col.GetOwnedRepositoryNames()
+	desiredRepoNames := coll.GetOwnedRepositoryNames()
 
 	// put the list into a map to make search time O(1)
 	desiredRepoNamesMap := make(map[string]struct{}, len(desiredRepoNames))
@@ -128,11 +128,11 @@ func (r *CollectionReconciler) reconcileRepos(ctx context.Context, col v1beta1.C
 
 	// ensure Repositories that are no longer needed are deleted
 	var curRepos v1beta1.RepositoryList
-	if err := r.List(ctx, &curRepos, &client.ListOptions{Namespace: col.Namespace}); err != nil {
+	if err := r.List(ctx, &curRepos, &client.ListOptions{Namespace: coll.Namespace}); err != nil {
 		lg.Error(err, "unable to list Repositories")
 	}
 	for _, repo := range curRepos.Items {
-		if !metav1.IsControlledBy(&repo, &col) {
+		if !metav1.IsControlledBy(&repo, &coll) {
 			continue
 		}
 		if _, ok := desiredRepoNamesMap[repo.Name]; !ok {
@@ -143,12 +143,12 @@ func (r *CollectionReconciler) reconcileRepos(ctx context.Context, col v1beta1.C
 	}
 
 	// ensure Repositories created
-	sched := col.Spec.Schedule
-	for i, cr := range col.Spec.Repos {
+	sched := coll.Spec.Schedule
+	for i, cr := range coll.Spec.Repos {
 		lg.Info("ensure Repository created", "name", desiredRepoNames[i])
 
 		repo := &v1beta1.Repository{}
-		repo.SetNamespace(col.Namespace)
+		repo.SetNamespace(coll.Namespace)
 		repo.SetName(desiredRepoNames[i])
 
 		op, err := ctrl.CreateOrUpdate(ctx, r.Client, repo, func() error {
@@ -156,13 +156,13 @@ func (r *CollectionReconciler) reconcileRepos(ctx context.Context, col v1beta1.C
 				Src:             cr.Src,
 				Dst:             cr.Dst,
 				Schedule:        sched,
-				TimeZone:        col.Spec.TimeZone,
-				GitImage:        col.Spec.GitImage,
-				ImagePullSecret: col.Spec.ImagePullSecret,
-				GitConfig:       col.Spec.GitConfig,
-				GitCredentials:  col.Spec.GitCredentials,
+				TimeZone:        coll.Spec.TimeZone,
+				GitImage:        coll.Spec.GitImage,
+				ImagePullSecret: coll.Spec.ImagePullSecret,
+				GitConfig:       coll.Spec.GitConfig,
+				GitCredentials:  coll.Spec.GitCredentials,
 			}
-			return ctrl.SetControllerReference(&col, repo, r.Scheme)
+			return ctrl.SetControllerReference(&coll, repo, r.Scheme)
 		})
 		if err != nil {
 			// NOTE: A Repository with the same name as desiredRepoNames[i] may exist
