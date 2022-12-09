@@ -91,7 +91,7 @@ func TestCollection_GetOwnedRepositoryNames(t *testing.T) {
 				{Name: pointer.String("foo"), Src: "http://example.com/hoge/foo", Dst: "http://example.com/fuga/foo"},
 			},
 		}}, []string{
-			"gitbackup-a-foo",
+			"a-foo",
 		}},
 		{"b-c/foo,bar,baz", fields{ObjectMeta: metav1.ObjectMeta{Name: "b-c"}, Spec: v1beta1.CollectionSpec{
 			Repos: []v1beta1.CollectionRepoURL{
@@ -100,9 +100,9 @@ func TestCollection_GetOwnedRepositoryNames(t *testing.T) {
 				{Name: nil, Src: "http://example.com/hoge/baz", Dst: "http://example.com/fuga/bazbazbaz"},
 			},
 		}}, []string{
-			"gitbackup-b-c-foo",
-			"gitbackup-b-c-bar",
-			"gitbackup-b-c-baz",
+			"b-c-foo",
+			"b-c-bar",
+			"b-c-baz",
 		}},
 	}
 	for _, tt := range tests {

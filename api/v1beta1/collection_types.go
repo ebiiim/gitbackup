@@ -31,9 +31,9 @@ func (r Collection) GetOwnedConfigMapName() string {
 	return strings.Join([]string{OperatorName, "gitconfig", "collection", r.Name}, "-")
 }
 
-// GetOwnedRepositoryNames returns ["gitbackup-{r.Name}-{r.Repos[i].Name}", ...]
+// GetOwnedRepositoryNames returns ["{r.Name}-{r.Repos[i].Name}", ...]
 func (r Collection) GetOwnedRepositoryNames() []string {
-	prefix := strings.Join([]string{OperatorName, r.Name, ""}, "-")
+	prefix := strings.Join([]string{r.Name, ""}, "-")
 	names := make([]string, len(r.Spec.Repos))
 	for i, cr := range r.Spec.Repos {
 		var name string
