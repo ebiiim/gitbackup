@@ -98,11 +98,11 @@ NAME              SCHEDULE    SUSPEND   ACTIVE   LAST SCHEDULE   AGE
 gitbackup-repo1   0 6 * * *   False     0        <none>          5s
 ```
 
-NOTE: You can test the `CronJob` by manually triggering it.
-
-```sh
-kubectl create job --from=cronjob/<name> <job-name>
-```
+> 💡 You can test the `CronJob` by manually triggering it.
+> 
+> ```sh
+> kubectl create job --from=cronjob/<name> <job-name>
+> ```
 
 ### Backup many Git repositories with a `Collection` resource
 
@@ -155,7 +155,7 @@ gitbackup-coll1-foo         1 6 * * *   False     0        <none>          5s
 gitbackup-coll1-gitbackup   0 6 * * *   False     0        <none>          5s
 ```
 
-> 💡 NOTE: Each job runs one minute apart.
+> 💡 Each job runs one minute apart.
 
 ### Uninstallation
 
