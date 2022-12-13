@@ -20,7 +20,7 @@ A [Kubernetes Operator](https://kubernetes.io/docs/concepts/extend-kubernetes/op
   - [Uninstallation](#uninstallation)
 - [Developing](#developing)
   - [Prerequisites](#prerequisites)
-  - [Run development clusters with kind](#run-development-clusters-with-kind)
+  - [Run a development cluster with kind](#run-a-development-cluster-with-kind)
 
 <!-- END doctoc generated TOC please keep comment here to allow auto update -->
 
@@ -178,9 +178,9 @@ Make sure you have the following tools installed:
 - Go
 - Docker
 
-### Run development clusters with [kind](https://kind.sigs.k8s.io/)
+### Run a development cluster with [kind](https://kind.sigs.k8s.io/)
 
 ```sh
-./hack/dev-kind-reset-clusters.sh # create a K8s cluster `kind-gitbackup`
+./hack/dev-kind-reset-cluster.sh # create a K8s cluster `kind-gitbackup`
 ./hack/dev-kind-deploy.sh # build and deploy the Operator
 ```
