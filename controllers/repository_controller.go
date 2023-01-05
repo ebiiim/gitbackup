@@ -203,6 +203,9 @@ func (r *RepositoryReconciler) reconcileCronJob(ctx context.Context, repo v1beta
 		WithJobTemplate(batchv1apply.JobTemplateSpec().WithSpec(batchv1apply.JobSpec().
 			WithParallelism(1).
 			WithCompletions(1).
+			// Delete history after 100 hours.
+			// Since this is a backup task, basically it should be fine as long as the latest run was successful.
+			WithTTLSecondsAfterFinished(3600 * 100).
 			WithTemplate(podTemplateSpec)))
 	if repo.Spec.TimeZone != nil {
 		cronJobSpec.WithTimeZone(*repo.Spec.TimeZone)

@@ -1,5 +1,11 @@
 # Changelog
 
+## 0.2.1 - 2023-01-05
+
+### Changed
+
+- Finished Jobs (regardless of completeness) will be deleted after 100 hours. Since this is a backup task, basically it should be fine as long as the latest run was successful.
+
 ## 0.2.0 - 2022-12-10
 
 ### Added

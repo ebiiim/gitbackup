@@ -60,7 +60,7 @@ kubectl apply -f https://github.com/cert-manager/cert-manager/releases/download/
 Deploy the Operator with the following command. It creates `gitbackup-system` namespace and deploys CRDs, controllers and other resources.
 
 ```sh
-kubectl apply -f https://github.com/ebiiim/gitbackup/releases/download/v0.2.0/gitbackup.yaml
+kubectl apply -f https://github.com/ebiiim/gitbackup/releases/download/v0.2.1/gitbackup.yaml
 ```
 
 ### Backup a Git repository with a `Repository` resource
@@ -162,7 +162,7 @@ gitbackup-coll1-gitbackup   0 6 * * *   False     0        <none>          5s
 Delete the Operator and resources with the following command.
 
 ```sh
-kubectl delete -f https://github.com/ebiiim/gitbackup/releases/download/v0.2.0/gitbackup.yaml
+kubectl delete -f https://github.com/ebiiim/gitbackup/releases/download/v0.2.1/gitbackup.yaml
 ```
 
 ## Developing
