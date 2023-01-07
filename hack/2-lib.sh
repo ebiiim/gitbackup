@@ -30,9 +30,13 @@ nodes:
 - role: worker
 EOF
 
-    "$KUBECTL" apply -f "$CERT_MANAGER_YAML"
     "$KUBECTL" apply -f "$METRICS_SERVER_YAML"
     "$KUBECTL" patch -n kube-system deployment metrics-server --type=json -p "$METRICS_SERVER_PATCH"
+
+    "$KUBECTL" apply -f "$CERT_MANAGER_YAML"
+    "$KUBECTL" wait deploy -ncert-manager cert-manager --for=condition=Available=True --timeout=60s
+    "$KUBECTL" wait deploy -ncert-manager cert-manager-cainjector --for=condition=Available=True --timeout=60s
+    "$KUBECTL" wait deploy -ncert-manager cert-manager-webhook --for=condition=Available=True --timeout=60s
 }
 
 # Usage: lib::start-docker
