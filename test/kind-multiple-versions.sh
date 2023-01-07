@@ -28,7 +28,7 @@ function run {
 
     "$KIND" load docker-image "$IMG" -n "$cluster"
     make deploy IMG="$IMG"
-    sleep 30
+    "$KUBECTL" wait deploy -ngitbackup-system gitbackup-controller-manager --for=condition=Available=True --timeout=60s
 
     ./hack/dev-kind-samples.sh
     sleep 5
