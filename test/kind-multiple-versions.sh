@@ -25,7 +25,6 @@ function run {
     local cluster="$PROJECT_NAME"
 
     KIND_IMAGE=$kind_image ./hack/dev-kind-reset-cluster.sh
-    sleep 50
 
     "$KIND" load docker-image "$IMG" -n "$cluster"
     make deploy IMG="$IMG"
