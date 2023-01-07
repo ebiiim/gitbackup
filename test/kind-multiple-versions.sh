@@ -9,6 +9,7 @@ VERSION=$(git describe --tags --match "v*")
 IMG=$PROJECT_NAME-controller:$VERSION
 
 # Node images for KIND v0.17.0 https://github.com/kubernetes-sigs/kind/releases/tag/v0.17.0
+KIND_IMAGE_126="kindest/node:v1.26.0@sha256:691e24bd2417609db7e589e1a479b902d2e209892a10ce375fab60a8407c7352"
 KIND_IMAGE_125="kindest/node:v1.25.3@sha256:f52781bc0d7a19fb6c405c2af83abfeb311f130707a0e219175677e366cc45d1"
 KIND_IMAGE_124="kindest/node:v1.24.7@sha256:577c630ce8e509131eab1aea12c022190978dd2f745aac5eb1fe65c0807eb315"
 KIND_IMAGE_123="kindest/node:v1.23.13@sha256:ef453bb7c79f0e3caba88d2067d4196f427794086a7d0df8df4f019d5e336b61"
@@ -48,6 +49,7 @@ function run {
 
 make docker-build IMG="$IMG"
 
+run $KIND_IMAGE_126
 run $KIND_IMAGE_125
 run $KIND_IMAGE_124
 run $KIND_IMAGE_123
