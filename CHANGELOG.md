@@ -1,5 +1,10 @@
 # Changelog
 
+## What comes next?
+
+- Upgrade `kubebuilder`.
+  - NOTE: We use `kube-rbac-proxy:v0.13.0` so [`gcr.io` retirement](https://github.com/kubernetes-sigs/kubebuilder/discussions/3907) affects us. The workaround is to use other image registry.
+
 ## 0.2.1 - 2023-01-05
 
 ### Changed
